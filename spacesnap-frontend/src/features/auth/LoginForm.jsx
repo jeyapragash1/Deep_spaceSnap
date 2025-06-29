@@ -1,27 +1,44 @@
 // src/features/auth/LoginForm.jsx
 import React, { useState } from 'react';
-import InputField from '../../components/common/InputField';
-import Button from '../../components/common/Button';
-import AlertMessage from '../../components/ui/AlertMessage';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { FaUser, FaLock } from 'react-icons/fa';
+import axios from 'axios';
+// ... other imports
 
-const LoginForm = ({ onSwitchToRegister }) => {
+// Receive setIsLoggedIn from AuthPage
+const LoginForm = ({ onSwitchToRegister, setIsLoggedIn }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); setLoading(true); setError('');
-    setTimeout(() => {
-      if (email === 'test@user.com' && password === 'password123') {
-        alert('Login Successful! (Frontend simulation)');
-        window.location.href = '/dashboard';
-      } else { setError('Invalid email or password.'); }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password,
+      });
+
+      const { token, user } = response.data;
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // This updates the parent App component's state
+      setIsLoggedIn(true);
+      
+      // We still use a hard redirect to ensure all components remount correctly
+      window.location.href = '/dashboard';
+
+    } catch (err) {
+      setError(err.response?.data?.message || 'An unknown error occurred.');
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
+
+  // ... rest of the component's return statement remains the same ...
   return (
     <form onSubmit={handleSubmit} className="w-full">
       <h2 className="text-2xl font-bold text-center mb-6 text-neutral-dark">Welcome Back!</h2>
@@ -33,4 +50,5 @@ const LoginForm = ({ onSwitchToRegister }) => {
     </form>
   );
 };
+
 export default LoginForm;
