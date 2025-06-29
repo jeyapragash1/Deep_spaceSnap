@@ -1,6 +1,6 @@
 // src/features/auth/RegisterForm.jsx
 import React, { useState } from 'react';
-import axios from 'axios'; // Import axios to make API calls
+import axios from 'axios'; // We need axios for API calls
 import InputField from '../../components/common/InputField';
 import Button from '../../components/common/Button';
 import AlertMessage from '../../components/ui/AlertMessage';
@@ -13,7 +13,6 @@ const RegisterForm = ({ onSwitchToLogin }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // State for handling messages
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,42 +22,33 @@ const RegisterForm = ({ onSwitchToLogin }) => {
     setError('');
     setSuccess('');
 
-    // --- Frontend Validation ---
-    if (!name || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields.');
-      return;
-    }
+    // Frontend Validation
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
       return;
     }
 
     setLoading(true);
 
     try {
-      // --- Make the API call to the backend ---
+      // Make the API call to the backend registration endpoint
       const response = await axios.post('http://localhost:5000/api/auth/register', {
         name,
         email,
         password,
       });
 
-      // Handle a successful response from the server
-      setSuccess(response.data.message + ' Please log in.'); // Show success message
+      // Handle successful registration
+      setSuccess(response.data.message + " Please log in.");
       
-      // Clear the form after a short delay and then switch to login
+      // After 2 seconds, switch to the login form
       setTimeout(() => {
         onSwitchToLogin();
-      }, 2000); // Wait 2 seconds
+      }, 2000);
 
     } catch (err) {
-      // Handle an error response from the server
-      // The backend sends a 'message' property in its error response
-      setError(err.response?.data?.message || 'An unknown error occurred.');
+      // Handle errors from the backend
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -68,7 +58,6 @@ const RegisterForm = ({ onSwitchToLogin }) => {
     <form onSubmit={handleSubmit} className="w-full">
       <h2 className="text-2xl font-bold text-center mb-6 text-neutral-dark">Create Your Account</h2>
       
-      {/* Display error or success messages */}
       {error && <AlertMessage message={error} type="error" />}
       {success && <AlertMessage message={success} type="success" />}
 

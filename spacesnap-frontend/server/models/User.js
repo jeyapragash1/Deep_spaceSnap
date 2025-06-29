@@ -9,13 +9,18 @@ const UserSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true, // Each email must be unique
+    unique: true,
   },
   password: {
     type: String,
     required: true,
   },
-  // We can add more fields later, like subscriptionStatus, etc.
-}, { timestamps: true }); // Automatically adds createdAt and updatedAt fields
+  // --- ADD THE NEW ROLE FIELD ---
+  role: {
+    type: String,
+    enum: ['registered_user', 'premium_user', 'designer', 'admin'], // Defines the possible roles
+    default: 'registered_user', // New users will automatically get this role
+  },
+}, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);
