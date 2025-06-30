@@ -1,27 +1,18 @@
 // src/services/aiVisualizerService.js
 
-// This MOCK service simulates a complex, client-side AI model.
-// In a real application, you would replace this with a real TensorFlow.js
-// image segmentation model.
+// This MOCK service now provides more detailed segmentation masks.
+// In a real app, a sophisticated AI model would generate these paths.
 
 const segmentRoom = async (imageFile) => {
-  console.log("Mock AI: Starting room segmentation analysis...");
-
-  // Simulate the time it takes for a real AI model to run (e.g., 2-4 seconds).
+  console.log("Mock AI: Starting advanced room segmentation (walls, floor, ceiling)...");
   await new Promise(resolve => setTimeout(resolve, 3000));
-
-  console.log("Mock AI: Analysis complete. Returning segmentation masks.");
+  console.log("Mock AI: Analysis complete. Returning detailed masks.");
   
-  // This is the FAKE result. It's a pre-defined SVG path that roughly
-  // outlines the walls of a sample room. The real AI would generate this
-  // path dynamically based on the uploaded image.
+  // FAKE result with more detail. These SVG paths represent different areas.
   return {
-    wallMask: "M0 0 L0 500 L300 450 L700 450 L800 550 L800 0 Z",
+    wallMask: "M0 100 L0 500 L300 450 L700 450 L800 550 L800 150 Z",
     floorMask: "M0 500 L300 450 L700 450 L800 550 L800 600 L0 600 Z",
-    // It could also identify objects and their positions.
-    objects: [
-        { label: 'sofa', box: [100, 350, 400, 150] }, // [x, y, width, height]
-    ]
+    ceilingMask: "M0 100 L800 150 L800 0 L0 0 Z",
   };
 };
 
