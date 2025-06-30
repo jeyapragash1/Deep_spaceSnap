@@ -12,7 +12,7 @@ import { FaFacebookF, FaInstagram, FaPinterestP, FaLinkedinIn } from 'react-icon
 const Footer = () => {
   return (
     // This className uses the 'neutral-dark' color we defined in tailwind.config.js
-    <footer className="bg-neutral-dark text-white p-8 mt-10">
+    <footer className="bg-[#33271E] text-white p-8 mt-10">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Brand Info */}
         <div>

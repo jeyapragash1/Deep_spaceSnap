@@ -12,8 +12,8 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
 
   const navItems = [
-    { name: "Visualizer", path: "/visualizer" },
     { name: "Style Quiz", path: "/style-quiz" },
+    { name: "Visualizer", path: "/visualizer" },
     { name: "AR Preview", path: "/ar-preview" },
   ];
 
@@ -44,16 +44,16 @@ const Navbar = () => {
   };
 
   return (
-    <header className="w-full fixed top-0 left-0 right-0 z-40 transition-all duration-300 bg-white shadow-md">
+    <header className="w-full fixed top-0 left-0 right-0 z-40 transition-all duration-300 bg-[#AA8366] shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[64px] flex justify-between items-center">
-        <NavLink to="/" className="text-xl font-bold text-gray-800 flex items-center gap-2">
+        <NavLink to="/" className="text-xl font-bold text-[#33271E] flex items-center gap-2">
           <img src={logo} alt="SpaceSnap Logo" className="h-8" />
           SpaceSnap
         </NavLink>
 
         <nav className="hidden md:flex items-center gap-6">
           {navItems.map((item) => (
-            <NavLink key={item.name} to={item.path} className={({ isActive }) => `px-3 py-2 rounded-md font-medium transition-colors ${isActive ? "text-teal-600" : "text-gray-700 hover:text-teal-600"}`}>
+            <NavLink key={item.name} to={item.path} className={({ isActive }) => `px-3 py-2 rounded-md font-medium transition-colors ${isActive ? "text-teal-600" : "text-[#33271E] hover:text-white"}`}>
               {item.name}
             </NavLink>
           ))}
@@ -78,7 +78,7 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <button onClick={login} className="px-5 py-2 border border-teal-600 text-teal-600 rounded-full font-semibold hover:bg-teal-600 hover:text-white transition-colors duration-300">
+              <button onClick={login} className="px-5 py-2 border border-[#5D3E1F] text-[#5D3E1F] rounded-full font-semibold hover:bg-[#33271E] hover:text-white transition-colors duration-300">
                 Login / Register
               </button>
             )}
