@@ -1,50 +1,62 @@
-// src/pages/StyleQuizPage.jsx
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { quizQuestions, styles } from '../data/quizData';
 import QuizLayout from '../components/layout/QuizLayout';
 import Button from '../components/common/Button';
 import { FaCheck } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
 
-// --- Results Component (The new, detailed summary) ---
+// --- Results Component (The detailed summary with next steps) ---
 const QuizResults = ({ scores, traits }) => {
     const getTopStyle = () => {
         let topStyle = '';
         let maxScore = -1;
+        // Find the style with the highest score
         for (const style in scores) {
             if (scores[style] > maxScore) {
                 maxScore = scores[style];
                 topStyle = style;
             }
         }
-        return topStyle || 'eclectic'; // Default style
+        return topStyle || 'eclectic'; // Default to 'eclectic' if no clear winner
     };
 
     const resultStyleKey = getTopStyle();
     const resultStyle = styles[resultStyleKey];
 
-    if (!resultStyle) return <div>Calculating your style...</div>;
+    // Safety check in case the style data isn't found
+    if (!resultStyle) {
+        return (
+            <div className="text-center p-8">
+                <h2 className="text-2xl font-bold">Calculating your style...</h2>
+                <p>Please wait a moment.</p>
+            </div>
+        );
+    }
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}>
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.8, ease: "easeOut" }}
+        >
             {/* 1. Hero Section for the result */}
-            <div className="relative rounded-lg overflow-hidden text-white text-center p-12 flex flex-col items-center justify-center min-h-[400px]">
-                <div className="absolute inset-0 bg-black bg-opacity-50 z-0"></div>
+            <div className="relative rounded-lg overflow-hidden text-white text-center p-12 flex flex-col items-center justify-center min-h-[400px] mb-10">
+                <div className="absolute inset-0 bg-black bg-opacity-60 z-0"></div>
                 <img src={resultStyle.heroImage} alt={resultStyle.name} className="absolute inset-0 w-full h-full object-cover z-[-1]" />
-                <h2 className="relative text-xl font-medium opacity-80 mb-2">YOUR DESIGN STYLE IS</h2>
+                <h2 className="relative text-xl font-medium opacity-90 mb-2 tracking-widest">YOUR PERSONALIZED STYLE</h2>
                 <h1 className="relative text-5xl md:text-7xl font-extrabold">{resultStyle.name}</h1>
             </div>
 
-            <div className="bg-white p-6 md:p-10 -mt-16 relative z-10 max-w-5xl mx-auto rounded-lg shadow-2xl">
+            <div className="bg-white p-6 md:p-10 -mt-24 relative z-10 max-w-5xl mx-auto rounded-lg shadow-2xl">
                 {/* 2. Description and "Why" summary */}
-                <div className="grid md:grid-cols-2 gap-10 mb-10">
+                <div className="grid md:grid-cols-2 gap-x-10 gap-y-8 mb-10">
                     <div>
-                        <h3 className="text-2xl font-bold text-neutral-dark mb-3">What this means...</h3>
+                        <h3 className="text-2xl font-bold text-neutral-dark mb-3">What This Means...</h3>
                         <p className="text-gray-700 leading-relaxed">{resultStyle.description}</p>
                     </div>
                     <div>
-                        <h3 className="text-2xl font-bold text-neutral-dark mb-3">Why you're a {resultStyle.name}</h3>
+                        <h3 className="text-2xl font-bold text-neutral-dark mb-3">Your Style Traits</h3>
                         <ul className="space-y-2">
                             {traits.slice(0, 4).map((trait, index) => (
                                 <li key={index} className="flex items-start">
@@ -69,12 +81,44 @@ const QuizResults = ({ scores, traits }) => {
                 </div>
 
                 {/* 4. Inspiration Gallery */}
-                <div>
+                <div className="mb-12">
                     <h3 className="text-2xl font-bold text-neutral-dark text-center mb-6">Get Inspired</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {resultStyle.galleryImages.map((img, index) => (
                             <img key={index} src={img} alt={`${resultStyle.name} inspiration ${index + 1}`} className="w-full h-64 object-cover rounded-lg shadow-md" />
                         ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* --- NEW ACTION SECTION AT THE BOTTOM --- */}
+            <div className="mt-12 text-center bg-gray-50 p-8 rounded-lg max-w-5xl mx-auto">
+                <h2 className="text-3xl font-bold text-neutral-dark mb-4">Choose Your Next Step</h2>
+                <p className="text-gray-600 max-w-2xl mx-auto mb-8">
+                    Your journey to a beautiful space has just begun. Bring your <span className="font-semibold text-primary-teal">{resultStyle.name}</span> vision to life.
+                </p>
+                
+                <div className="flex flex-col md:flex-row items-stretch justify-center gap-6">
+                    {/* --- Path B: Visualize in Your Room --- */}
+                    <div className="w-full md:w-1/2 text-left p-6 border rounded-lg bg-white flex flex-col">
+                        <h3 className="text-xl font-semibold mb-2">Visualize in Your Room</h3>
+                        <p className="text-sm text-gray-600 mb-4 flex-grow">
+                            Want to see how these colors and styles look in your own space? Use our AI Visualizer to apply your new style directly to a photo of your room.
+                        </p>
+                        <Link to={`/visualizer?style=${resultStyleKey}`}>
+                            <Button className="w-full">Try AI Visualizer</Button>
+                        </Link>
+                    </div>
+
+                    {/* --- Path A: Book a Design Package --- */}
+                    <div className="w-full md:w-1/2 text-left p-6 border rounded-lg bg-primary-teal text-white flex flex-col">
+                        <h3 className="text-xl font-semibold mb-2">Book a Design Package</h3>
+                        <p className="text-sm opacity-90 mb-4 flex-grow">
+                            Ready to make it official? Browse pre-made design packages or book a consultation with a professional designer specializing in the {resultStyle.name} style.
+                        </p>
+                        <Link to={`/packages?style=${resultStyleKey}`}>
+                           <Button className="w-full bg-accent-gold hover:bg-opacity-90">Browse Packages</Button>
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -90,19 +134,19 @@ const StyleQuizPage = () => {
     const [isFinished, setIsFinished] = useState(false);
 
     const handleAnswerClick = (answer) => {
-        // Update scores
         const newScores = { ...scores };
         for (const style in answer.stylePoints) {
             newScores[style] = (newScores[style] || 0) + answer.stylePoints[style];
         }
         setScores(newScores);
 
-        // Update traits
         if (answer.trait) {
-            setTraits([...traits, answer.trait]);
+            // Avoid adding duplicate traits
+            if (!traits.includes(answer.trait)) {
+                setTraits([...traits, answer.trait]);
+            }
         }
 
-        // Move to next question or finish
         const nextQuestionIndex = currentQuestionIndex + 1;
         if (nextQuestionIndex < quizQuestions.length) {
             setCurrentQuestionIndex(nextQuestionIndex);
@@ -136,7 +180,7 @@ const StyleQuizPage = () => {
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {currentQuestion.answers.map((answer, index) => (
-                                        <button key={index} onClick={() => handleAnswerClick(answer)} className="p-6 bg-white rounded-lg shadow-md hover:shadow-xl hover:bg-primary-teal hover:text-white transition-all duration-300">
+                                        <button key={index} onClick={() => handleAnswerClick(answer)} className="p-6 bg-white rounded-lg shadow-md hover:shadow-xl hover:bg-primary-teal hover:text-white transition-all duration-300 h-full">
                                             <p className="text-lg font-semibold">{answer.text}</p>
                                         </button>
                                     ))}
