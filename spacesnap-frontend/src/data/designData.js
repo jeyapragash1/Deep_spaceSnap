@@ -1,6 +1,18 @@
 // src/data/designData.js
 
-const imageSource = 'https://plus.unsplash.com/premium_photo-1678559109912-61ab7424a548';
+// --- FINAL, CORRECTED LOCAL IMAGE IMPORTS ---
+// This code now imports every image from its exact location and with its correct name and extension.
+// There are NO sub-folders in the paths.
+import ceilingFanImg from '../assets/images/celling-fan.jpg';    // Corrected spelling and path
+import darkWoodPattern from '../assets/images/dark-wood.jpg';    // Corrected path
+import lightWoodPattern from '../assets/images/light-wood.jpg';   // Corrected path
+import marbleTilePattern from '../assets/images/marble-tile.jpg'; // Corrected path
+import paintingImg from '../assets/images/painting.jpg';         // Corrected path
+import pendantLightImg from '../assets/images/pendant-light.jpg';  // Corrected path
+import plantImg from '../assets/images/plant.jpg';               // Corrected path
+import sofaImg from '../assets/images/sofa.webp';                // Corrected path and extension
+import wallClockImg from '../assets/images/wall-clock.jpg';        // Corrected path
+
 
 // --- WALLS ---
 export const wallColorPalettes = {
@@ -16,29 +28,25 @@ export const ceilingColorPalettes = {
     default: ['#FFFFFF', '#F5F5F5', '#E8E8E8', '#DCDCDC'],
 };
 
-// --- FLOORS (Using repeating background images for tiles) ---
+// --- FLOORS (Now using the correct imported images) ---
 export const floorPatterns = [
-    { id: 'floor01', name: 'Light Wood', image: 'https://www.toptal.com/designers/subtlepatterns/uploads/light-veneer.png' },
-    { id: 'floor02', name: 'Dark Wood', image: 'https://www.toptal.com/designers/subtlepatterns/uploads/dark-wood.png' },
-    { id: 'floor03', name: 'Marble Tile', image: 'https://www.toptal.com/designers/subtlepatterns/uploads/marbel.png' },
-    { id: 'floor04', name: 'Gray Concrete', image: 'https://www.toptal.com/designers/subtlepatterns/uploads/concrete-wall.png' },
+    { id: 'floor01', name: 'Light Wood', image: lightWoodPattern },
+    { id: 'floor02', name: 'Dark Wood', image: darkWoodPattern },
+    { id: 'floor03', name: 'Marble Tile', image: marbleTilePattern },
 ];
 
-// --- PLACEABLE OBJECTS (Using transparent PNGs) ---
-// We categorize them for better organization in the UI.
+// --- PLACEABLE OBJECTS (Now using the correct imported images) ---
 export const placeableObjects = {
     wall: [
-        { id: 'obj_wall_01', name: 'Modern Wall Clock', image: 'https://www.pngmart.com/files/15/Modern-Wall-Clock-PNG-Image.png', width: 100, height: 100 },
-        { id: 'obj_wall_02', name: 'Abstract Painting', image: 'https://www.pngmart.com/files/22/Abstract-Painting-PNG-Isolated-Pic.png', width: 150, height: 120 },
-        { id: 'obj_wall_03', name: 'Wall Shelf', image: 'https://www.pngmart.com/files/15/Wall-Shelf-PNG-Image.png', width: 200, height: 50 },
+        { id: 'obj_wall_01', name: 'Modern Wall Clock', image: wallClockImg, width: 100, height: 100 },
+        { id: 'obj_wall_02', name: 'Abstract Painting', image: paintingImg, width: 150, height: 120 },
     ],
     floor: [
-        { id: 'obj_floor_01', name: 'Sleek Sofa', image: 'https://www.pngmart.com/files/7/Sofa-PNG-Transparent-Image.png', width: 300, height: 150 },
-        { id: 'obj_floor_02', name: 'House Plant', image: 'https://www.pngmart.com/files/15/House-Plant-PNG-Image.png', width: 80, height: 120 },
-        { id: 'obj_floor_03', name: 'Floor Lamp', image: 'https://www.pngmart.com/files/15/Floor-Lamp-PNG-Clipart.png', width: 60, height: 180 },
+        { id: 'obj_floor_01', name: 'Sleek Sofa', image: sofaImg, width: 300, height: 150 },
+        { id: 'obj_floor_02', name: 'House Plant', image: plantImg, width: 80, height: 120 },
     ],
     ceiling: [
-        { id: 'obj_ceil_01', name: 'Ceiling Fan', image: 'https://www.pngmart.com/files/22/Ceiling-Fan-PNG-HD.png', width: 150, height: 70 },
-        { id: 'obj_ceil_02', name: 'Pendant Light', image: 'https://www.pngmart.com/files/22/Pendant-Light-PNG-File.png', width: 80, height: 100 },
+        { id: 'obj_ceil_01', name: 'Ceiling Fan', image: ceilingFanImg, width: 150, height: 70 },
+        { id: 'obj_ceil_02', name: 'Pendant Light', image: pendantLightImg, width: 80, height: 100 },
     ],
 };
