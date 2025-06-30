@@ -1,95 +1,157 @@
-// src/pages/AIVisualizerPage.jsx
+// src/pages/AiVisualizerPage.jsx
+
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
-import { styles } from '../data/quizData'; // We reuse our style data
-import Button from '../components/common/Button';
-import { FaUpload, FaPalette } from 'react-icons/fa';
+import aiVisualizerService from '../services/aiVisualizerService'; // Our Mock AI
+import { colorPalettes, furnitureSuggestions } from '../data/designData';
+import { FaPalette, FaCouch, FaSpinner, FaMagic } from 'react-icons/fa';
+import { motion } from 'framer-motion';
 
-const AIVisualizerPage = () => {
-  // This hook lets us read the URL's query parameters (e.g., ?style=modern)
-  const [searchParams] = useSearchParams();
-  const styleFromQuiz = searchParams.get('style'); // This will be 'modern', 'bohemian', etc.
+const AiVisualizerPage = () => {
+    const location = useLocation();
 
-  const [suggestedStyle, setSuggestedStyle] = useState(null);
-  const [selectedColor, setSelectedColor] = useState('#FFFFFF'); // Default to white
-  const [roomImage, setRoomImage] = useState(null);
+    // --- STATE MANAGEMENT ---
+    // The original image file uploaded by the user
+    const [originalImage, setOriginalImage] = useState(null);
+    // URL for the uploaded image to display it
+    const [imagePreview, setImagePreview] = useState(null);
+    // The suggested style from the quiz (e.g., 'modern')
+    const [suggestedStyle, setSuggestedStyle] = useState('default');
+    // The color palettes to show the user
+    const [palettes, setPalettes] = useState(colorPalettes.default);
+    // The current color selected by the user for the walls
+    const [selectedWallColor, setSelectedWallColor] = useState('#FFFFFF');
+    // The mask for the walls returned by our "AI"
+    const [wallMask, setWallMask] = useState(null);
+    // State to show a loading screen while the "AI" is working
+    const [isProcessing, setIsProcessing] = useState(false);
+    // State to track if the visualization is complete
+    const [isVisualized, setIsVisualized] = useState(false);
 
-  // When the page loads, check if a style was passed from the quiz
-  useEffect(() => {
-    if (styleFromQuiz && styles[styleFromQuiz]) {
-      const styleData = styles[styleFromQuiz];
-      setSuggestedStyle(styleData);
-      // Automatically select the first recommended color for that style
-      if (styleData.keyElements.includes("Neutral Colors")) setSelectedColor('#E5E7EB'); // A light gray
-      if (styleData.keyElements.includes("Rich Patterns")) setSelectedColor('#8B4513'); // A saddle brown
-    }
-  }, [styleFromQuiz]);
+    // --- LIFECYCLE HOOKS ---
+    // This runs once when the page loads to get the quiz summary
+    useEffect(() => {
+        const quizStyle = location.state?.suggestedStyle;
+        if (quizStyle && colorPalettes[quizStyle]) {
+            console.log(`Received style from quiz: ${quizStyle}`);
+            setSuggestedStyle(quizStyle);
+            setPalettes(colorPalettes[quizStyle]);
+            setSelectedWallColor(colorPalettes[quizStyle][0]); // Set initial color
+        }
+    }, [location.state]);
 
-  const handleImageUpload = (event) => {
-    if (event.target.files && event.target.files[0]) {
-      setRoomImage(URL.createObjectURL(event.target.files[0]));
-    }
-  };
+    // --- HANDLER FUNCTIONS ---
+    const handleImageUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setOriginalImage(file);
+            setImagePreview(URL.createObjectURL(file));
+            // Reset previous results
+            setIsVisualized(false);
+            setWallMask(null);
+        }
+    };
 
-  return (
-    <MainLayout>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-extrabold text-neutral-dark text-center mb-2">AI Room Visualizer</h1>
-        <p className="text-center text-gray-600 mb-8">Upload a photo of your room to see the magic happen.</p>
+    const handleVisualizeClick = async () => {
+        if (!originalImage) {
+            alert("Please upload an image first.");
+            return;
+        }
+        setIsProcessing(true);
+        setIsVisualized(false);
+        try {
+            // Call our mock AI service
+            const result = await aiVisualizerService.segmentRoom(originalImage);
+            setWallMask(result.wallMask); // Store the "mask"
+            setIsVisualized(true); // Show the result
+        } catch (error) {
+            console.error("Error during visualization:", error);
+            alert("Something went wrong during the visualization process.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+    
+    // --- RENDER LOGIC ---
+    return (
+        <MainLayout>
+            <div className="container mx-auto px-4 py-12">
+                <div className="text-center mb-10">
+                    <h1 className="text-4xl md:text-5xl font-bold text-primary-teal mb-4">AI Room Visualizer</h1>
+                    <p className="text-lg text-gray-700">See your design ideas come to life instantly.</p>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* --- Left Side: Control Panel --- */}
+                    <div className="bg-white p-6 rounded-lg shadow-lg">
+                        <h2 className="text-2xl font-bold text-neutral-dark mb-4">1. Upload Your Room</h2>
+                        <input type="file" accept="image/*" onChange={handleImageUpload} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-teal file:text-white hover:file:bg-opacity-90"/>
+                        
+                        <hr className="my-6" />
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* --- Column 1: Controls & Suggestions --- */}
-          <div className="md:col-span-1 bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Controls</h2>
+                        <h2 className="text-2xl font-bold text-neutral-dark mb-4">2. Choose a Wall Color</h2>
+                        <p className="text-sm text-gray-600 mb-2">Based on your <span className="font-bold capitalize">{suggestedStyle}</span> style profile:</p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {palettes.map(color => (
+                                <button key={color} onClick={() => setSelectedWallColor(color)} style={{ backgroundColor: color }} className={`w-10 h-10 rounded-full border-2 ${selectedWallColor === color ? 'border-primary-teal scale-110' : 'border-transparent'}`}></button>
+                            ))}
+                        </div>
 
-            {/* Image Upload */}
-            <div className="mb-6">
-              <label htmlFor="image-upload" className="w-full">
-                <Button as="span" className="w-full flex items-center justify-center">
-                    <FaUpload className="mr-2" /> Upload Your Room
-                </Button>
-              </label>
-              <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                        {/* We can add a furniture section here later */}
+
+                        <hr className="my-6" />
+
+                        <button onClick={handleVisualizeClick} disabled={isProcessing || !originalImage} className="w-full bg-accent-gold text-white font-bold py-4 px-8 rounded-lg text-xl flex items-center justify-center gap-3 disabled:bg-gray-400">
+                            {isProcessing ? <FaSpinner className="animate-spin" /> : <FaMagic />}
+                            {isProcessing ? 'Analyzing Your Room...' : 'Visualize!'}
+                        </button>
+                    </div>
+
+                    {/* --- Right Side: Image Display --- */}
+                    <div className="bg-gray-200 p-6 rounded-lg shadow-lg flex items-center justify-center min-h-[400px]">
+                        {!imagePreview && <p className="text-gray-500">Your room image will appear here</p>}
+                        
+                        {/* The visualization result area */}
+                        {imagePreview && (
+                            <div className="relative w-full h-full">
+                                <img src={imagePreview} alt="Your Room" className="w-full h-full object-contain rounded-md" />
+                                
+                                {/* This SVG overlay is our "AI" result. It paints the color over the wall. */}
+                                {isVisualized && wallMask && (
+                                    <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 800 600" preserveAspectRatio="none">
+                                        <path 
+                                            d={wallMask} 
+                                            fill={selectedWallColor} 
+                                            style={{ mixBlendMode: 'multiply' }} // This blend mode makes it look realistic
+                                            className="animate-fadeIn"
+                                        />
+                                    </svg>
+                                )}
+                            </div>
+                        )}
+                        
+                        {/* Loading Overlay */}
+                        {isProcessing && (
+                            <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white rounded-lg">
+                                <FaSpinner className="animate-spin text-5xl mb-4" />
+                                <p className="text-lg font-semibold">Our AI is redesigning your space...</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                
+                {/* The iterative feedback section you wanted */}
+                {isVisualized && (
+                    <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} className="mt-8 bg-white p-6 rounded-lg shadow-lg text-center">
+                        <h3 className="text-2xl font-bold text-neutral-dark mb-3">What do you think?</h3>
+                        <p className="text-gray-600 mb-4">Not quite right? Just pick a different color and the design will update instantly!</p>
+                        <p className="text-sm text-gray-500">You can also add furniture or move to the next feature: AR Preview.</p>
+                    </motion.div>
+                )}
             </div>
-
-            {/* Color Palette */}
-            <div>
-                <h3 className="font-semibold mb-3 flex items-center"><FaPalette className="mr-2 text-primary-teal" /> Wall Color</h3>
-                <input type="color" value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)} className="w-full h-10 p-1 border rounded-lg" />
-            </div>
-
-            {/* Dynamic Suggestions from Quiz */}
-            {suggestedStyle && (
-              <div className="mt-8 p-4 bg-neutral-light rounded-lg">
-                <h3 className="font-bold text-neutral-dark">Style Suggestion from Quiz:</h3>
-                <p className="text-lg font-semibold text-primary-teal">{suggestedStyle.name}</p>
-                <p className="text-sm text-gray-600">{suggestedStyle.description}</p>
-              </div>
-            )}
-          </div>
-
-          {/* --- Column 2: The Visualizer Area --- */}
-          <div className="md:col-span-2 bg-gray-200 rounded-lg shadow-inner flex items-center justify-center min-h-[500px] relative overflow-hidden">
-            {roomImage ? (
-              <>
-                <img src={roomImage} alt="User's room" className="w-full h-full object-contain" />
-                {/* This is where the AI magic happens. We simulate it with a colored overlay. */}
-                <div 
-                  className="absolute inset-0 mix-blend-multiply" 
-                  style={{ backgroundColor: selectedColor }}
-                ></div>
-              </>
-            ) : (
-              <div className="text-center text-gray-500">
-                <p>Please upload an image of your room to begin.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </MainLayout>
-  );
+        </MainLayout>
+    );
 };
 
-export default AIVisualizerPage;
+export default AiVisualizerPage;

@@ -1,26 +1,25 @@
+// src/context/AuthContext.jsx
+
 import React, { createContext, useContext, useState } from 'react';
 
-// This is our mock user data. We can change the role to test the navbar.
-// Possible roles: 'admin', 'designer', 'premium', 'registered'
 const mockUser = {
   name: 'Jeyapragash',
   email: 'jeyapragash@test.com',
   role: 'premium',
-  avatar: 'https://i.pravatar.cc/150' // A random placeholder avatar image
+  // NEW and reliable: Fetches a random portrait photo from Unsplash
+  avatar: 'https://source.unsplash.com/150x150/?portrait,person' 
 };
 
-// 1. Create the Context
+// 1. Create the context
 const AuthContext = createContext(null);
 
-// 2. Create the Provider Component
+// 2. Create the Provider component
 export const AuthProvider = ({ children }) => {
-  // To test the "logged in" view, change `null` to `mockUser`
-  // To test the "logged out" view, keep it as `null`
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); 
 
   const login = () => {
     console.log("Logging in with mock user...");
-    setUser(mockUser);
+    setUser(mockUser); 
   };
 
   const logout = () => {
@@ -28,12 +27,17 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const value = { user, isAuthenticated: !!user, login, logout };
+  const value = { 
+    user,
+    isAuthenticated: !!user,
+    login,
+    logout
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 3. Create the Custom Hook for easy access
+// 3. Create the custom hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

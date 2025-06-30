@@ -1,198 +1,148 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { quizQuestions, styles } from '../data/quizData';
-import QuizLayout from '../components/layout/QuizLayout';
-import Button from '../components/common/Button';
-import { FaCheck } from 'react-icons/fa';
+// src/pages/StyleQuizPage.jsx
 
-// --- Results Component (The detailed summary with next steps) ---
-const QuizResults = ({ scores, traits }) => {
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { quizQuestions, styles } from '../data/quizData';
+import MainLayout from '../components/layout/MainLayout';
+import Button from '../components/common/Button';
+import { FaHeart } from 'react-icons/fa';
+
+// --- NEW ENHANCED RESULTS COMPONENT ---
+const QuizResults = ({ scores }) => {
+    // useNavigate hook from React Router to programmatically go to other pages
+    const navigate = useNavigate();
+
     const getTopStyle = () => {
-        let topStyle = '';
+        if (!scores || Object.keys(scores).length === 0) return 'modern';
+        let topStyleKey = 'modern';
         let maxScore = -1;
-        // Find the style with the highest score
         for (const style in scores) {
-            if (scores[style] > maxScore) {
+            if (styles[style] && scores[style] > maxScore) { // Ensure the style exists
                 maxScore = scores[style];
-                topStyle = style;
+                topStyleKey = style;
             }
         }
-        return topStyle || 'eclectic'; // Default to 'eclectic' if no clear winner
+        return topStyleKey;
     };
 
     const resultStyleKey = getTopStyle();
     const resultStyle = styles[resultStyleKey];
 
-    // Safety check in case the style data isn't found
-    if (!resultStyle) {
-        return (
-            <div className="text-center p-8">
-                <h2 className="text-2xl font-bold">Calculating your style...</h2>
-                <p>Please wait a moment.</p>
-            </div>
-        );
-    }
+    // --- LOGIC FOR THE NEW FEATURES ---
+    const handleBookNow = (packageName, price) => {
+        // In a real app, this would redirect to a Stripe checkout page.
+        // For now, we'll just show an alert.
+        alert(`Booking confirmation: You are about to book the "${packageName}" package for $${price}.`);
+        console.log(`User wants to book package: ${packageName}, Price: $${price}`);
+    };
+
+    const handleGoToVisualizer = () => {
+        // This is the key part for Feature 2.
+        // We navigate to the visualizer page and pass the quiz result in the "state".
+        console.log(`Navigating to Visualizer with style: ${resultStyleKey}`);
+        navigate('/visualizer', { state: { suggestedStyle: resultStyleKey } });
+    };
 
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-            {/* 1. Hero Section for the result */}
-            <div className="relative rounded-lg overflow-hidden text-white text-center p-12 flex flex-col items-center justify-center min-h-[400px] mb-10">
-                <div className="absolute inset-0 bg-black bg-opacity-60 z-0"></div>
-                <img src={resultStyle.heroImage} alt={resultStyle.name} className="absolute inset-0 w-full h-full object-cover z-[-1]" />
-                <h2 className="relative text-xl font-medium opacity-90 mb-2 tracking-widest">YOUR PERSONALIZED STYLE</h2>
-                <h1 className="relative text-5xl md:text-7xl font-extrabold">{resultStyle.name}</h1>
-            </div>
+        <div className="w-full max-w-6xl text-center p-8 bg-neutral-light rounded-lg shadow-xl animate-fadeIn">
+            {/* --- Quiz Summary --- */}
+            <h2 className="text-2xl font-bold mb-2">Your Primary Style is:</h2>
+            <h3 className="text-5xl font-extrabold text-primary-teal mb-4">{resultStyle.name}</h3>
+            <p className="text-gray-700 max-w-3xl mx-auto mb-10">{resultStyle.description}</p>
 
-            <div className="bg-white p-6 md:p-10 -mt-24 relative z-10 max-w-5xl mx-auto rounded-lg shadow-2xl">
-                {/* 2. Description and "Why" summary */}
-                <div className="grid md:grid-cols-2 gap-x-10 gap-y-8 mb-10">
-                    <div>
-                        <h3 className="text-2xl font-bold text-neutral-dark mb-3">What This Means...</h3>
-                        <p className="text-gray-700 leading-relaxed">{resultStyle.description}</p>
-                    </div>
-                    <div>
-                        <h3 className="text-2xl font-bold text-neutral-dark mb-3">Your Style Traits</h3>
-                        <ul className="space-y-2">
-                            {traits.slice(0, 4).map((trait, index) => (
-                                <li key={index} className="flex items-start">
-                                    <FaCheck className="text-primary-teal mr-3 mt-1 flex-shrink-0" />
-                                    <span className="text-gray-700">You {trait}.</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-
-                {/* 3. Key Elements */}
-                <div className="mb-10">
-                    <h3 className="text-2xl font-bold text-neutral-dark text-center mb-6">Key Elements of This Style</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                        {resultStyle.keyElements.map(element => (
-                            <div key={element} className="bg-neutral-light p-4 rounded-lg">
-                                <p className="font-semibold text-neutral-dark">{element}</p>
+            {/* --- Suggested Design Packages --- */}
+            <h4 className="text-3xl font-bold text-neutral-dark mb-6">Here are some designs you might love:</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                {resultStyle.packages.map((pkg) => (
+                    <motion.div 
+                        key={pkg.id}
+                        className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
+                        whileHover={{ y: -5, shadow: 'xl' }}
+                    >
+                        <img src={pkg.image} alt={pkg.name} className="w-full h-56 object-cover" />
+                        <div className="p-4 flex flex-col flex-grow">
+                            <h5 className="text-xl font-semibold text-neutral-dark mb-2">{pkg.name}</h5>
+                            <p className="text-2xl font-bold text-primary-teal mb-4">${pkg.price}</p>
+                            <div className="mt-auto flex items-center justify-between">
+                                <Button onClick={() => handleBookNow(pkg.name, pkg.price)}>
+                                    Book This Design
+                                </Button>
+                                <FaHeart className="text-gray-300 hover:text-red-500 cursor-pointer transition-colors" size={24} />
                             </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* 4. Inspiration Gallery */}
-                <div className="mb-12">
-                    <h3 className="text-2xl font-bold text-neutral-dark text-center mb-6">Get Inspired</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {resultStyle.galleryImages.map((img, index) => (
-                            <img key={index} src={img} alt={`${resultStyle.name} inspiration ${index + 1}`} className="w-full h-64 object-cover rounded-lg shadow-md" />
-                        ))}
-                    </div>
-                </div>
+                        </div>
+                    </motion.div>
+                ))}
             </div>
-
-            {/* --- NEW ACTION SECTION AT THE BOTTOM --- */}
-            <div className="mt-12 text-center bg-gray-50 p-8 rounded-lg max-w-5xl mx-auto">
-                <h2 className="text-3xl font-bold text-neutral-dark mb-4">Choose Your Next Step</h2>
-                <p className="text-gray-600 max-w-2xl mx-auto mb-8">
-                    Your journey to a beautiful space has just begun. Bring your <span className="font-semibold text-primary-teal">{resultStyle.name}</span> vision to life.
+            
+            {/* --- Transition to Feature 2 --- */}
+            <div className="bg-white p-8 rounded-lg border border-dashed border-primary-teal">
+                <h4 className="text-2xl font-bold text-neutral-dark mb-3">Want to see it in YOUR room?</h4>
+                <p className="text-gray-600 mb-6 max-w-xl mx-auto">
+                    Take your <span className="font-bold text-primary-teal">{resultStyle.name}</span> style and apply it directly to a photo of your own room with our AI Visualizer.
                 </p>
-                
-                <div className="flex flex-col md:flex-row items-stretch justify-center gap-6">
-                    {/* --- Path B: Visualize in Your Room --- */}
-                    <div className="w-full md:w-1/2 text-left p-6 border rounded-lg bg-white flex flex-col">
-                        <h3 className="text-xl font-semibold mb-2">Visualize in Your Room</h3>
-                        <p className="text-sm text-gray-600 mb-4 flex-grow">
-                            Want to see how these colors and styles look in your own space? Use our AI Visualizer to apply your new style directly to a photo of your room.
-                        </p>
-                        <Link to={`/visualizer?style=${resultStyleKey}`}>
-                            <Button className="w-full">Try AI Visualizer</Button>
-                        </Link>
-                    </div>
-
-                    {/* --- Path A: Book a Design Package --- */}
-                    <div className="w-full md:w-1/2 text-left p-6 border rounded-lg bg-primary-teal text-white flex flex-col">
-                        <h3 className="text-xl font-semibold mb-2">Book a Design Package</h3>
-                        <p className="text-sm opacity-90 mb-4 flex-grow">
-                            Ready to make it official? Browse pre-made design packages or book a consultation with a professional designer specializing in the {resultStyle.name} style.
-                        </p>
-                        <Link to={`/packages?style=${resultStyleKey}`}>
-                           <Button className="w-full bg-accent-gold hover:bg-opacity-90">Browse Packages</Button>
-                        </Link>
-                    </div>
-                </div>
+                <Button onClick={handleGoToVisualizer} className="px-10 py-4 text-xl">
+                    Go to AI Visualizer
+                </Button>
             </div>
-        </motion.div>
+        </div>
     );
 };
 
-// --- Main Quiz Page Component ---
+
+// The main quiz page component (this part remains the same)
 const StyleQuizPage = () => {
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [currentQuestionId, setCurrentQuestionId] = useState('start');
     const [scores, setScores] = useState({});
-    const [traits, setTraits] = useState([]); // State to hold user traits
     const [isFinished, setIsFinished] = useState(false);
 
     const handleAnswerClick = (answer) => {
-        const newScores = { ...scores };
-        for (const style in answer.stylePoints) {
-            newScores[style] = (newScores[style] || 0) + answer.stylePoints[style];
-        }
-        setScores(newScores);
-
-        if (answer.trait) {
-            // Avoid adding duplicate traits
-            if (!traits.includes(answer.trait)) {
-                setTraits([...traits, answer.trait]);
+        if (answer.stylePoints) {
+            const newScores = { ...scores };
+            for (const style in answer.stylePoints) {
+                newScores[style] = (newScores[style] || 0) + answer.stylePoints[style];
             }
+            setScores(newScores);
         }
-
-        const nextQuestionIndex = currentQuestionIndex + 1;
-        if (nextQuestionIndex < quizQuestions.length) {
-            setCurrentQuestionIndex(nextQuestionIndex);
+        if (answer.nextQuestion) {
+            setCurrentQuestionId(answer.nextQuestion);
         } else {
             setIsFinished(true);
         }
     };
-
-    const currentQuestion = quizQuestions[currentQuestionIndex];
-    const progressPercentage = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
+    
+    const currentQuestion = quizQuestions[currentQuestionId];
 
     return (
-        <QuizLayout>
-            <div className="w-full max-w-4xl p-4">
-                <AnimatePresence mode="wait">
-                    {!isFinished ? (
-                        <motion.div key={currentQuestionIndex} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -40 }} transition={{ duration: 0.4 }} className="w-full">
-                            <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-                                <motion.div className="bg-primary-teal h-2 rounded-full" initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} transition={{ duration: 0.5, ease: "easeInOut" }}></motion.div>
+        <MainLayout>
+            <div className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[calc(100vh-128px)]">
+                {!isFinished ? (
+                    <motion.div key={currentQuestionId} initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.5 }} className="w-full max-w-4xl text-center">
+                        <h2 className="text-3xl font-bold text-neutral-dark mb-10">{currentQuestion.question}</h2>
+                        {currentQuestion.type === 'image' ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {currentQuestion.answers.map((answer, index) => (
+                                    <button key={index} onClick={() => handleAnswerClick(answer)} className="group relative rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                                        <img src={answer.image} alt={`Style option ${index + 1}`} className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-10 transition-all duration-300"></div>
+                                    </button>
+                                ))}
                             </div>
-                            <h2 className="text-2xl sm:text-4xl font-bold text-neutral-dark text-center mb-10">{currentQuestion.question}</h2>
-                            {currentQuestion.type === 'image' ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    {currentQuestion.answers.map((answer, index) => (
-                                        <button key={index} onClick={() => handleAnswerClick(answer)} className="group block text-left bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
-                                            <img src={answer.image} alt={answer.text} className="w-full h-48 object-cover" />
-                                            <p className="p-4 text-lg font-semibold text-neutral-dark group-hover:text-primary-teal">{answer.text}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {currentQuestion.answers.map((answer, index) => (
-                                        <button key={index} onClick={() => handleAnswerClick(answer)} className="p-6 bg-white rounded-lg shadow-md hover:shadow-xl hover:bg-primary-teal hover:text-white transition-all duration-300 h-full">
-                                            <p className="text-lg font-semibold">{answer.text}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </motion.div>
-                    ) : (
-                        <QuizResults scores={scores} traits={traits} />
-                    )}
-                </AnimatePresence>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                                {currentQuestion.answers.map((answer, index) => (
+                                    <button key={index} onClick={() => handleAnswerClick(answer)} className="p-6 bg-white rounded-lg shadow-md hover:shadow-xl hover:bg-primary-teal hover:text-white transition-all duration-300 text-left">
+                                        <p className="text-lg font-semibold">{answer.text}</p>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </motion.div>
+                ) : (
+                    <QuizResults scores={scores} />
+                )}
             </div>
-        </QuizLayout>
+        </MainLayout>
     );
 };
 
