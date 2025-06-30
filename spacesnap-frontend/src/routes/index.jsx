@@ -1,19 +1,21 @@
 // src/routes/index.jsx
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from '../pages/LandingPage';
-// ... other page imports
-
-// Import the new dashboard page
-import PremiumUserDashboardPage from '../pages/PremiumUserDashboard';
+import StyleQuizPage from '../pages/StyleQuizPage'; 
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      {/* ... other routes */}
-
-      {/* Add a new route for the dashboard */}
-      <Route path="/dashboard" element={<PremiumUserDashboardPage />} />
+      
+      {/* This is the correct way to add a comment inside JSX */}
+      <Route path="/style-quiz" element={<StyleQuizPage />} />
+      
+      {/* You can add your other routes here later */}
+      {/* 
+        <Route path="/about" element={<AboutUsPage />} />
+        <Route path="/contact" element={<ContactUsPage />} />
+      */}
     </Routes>
   );
 };
