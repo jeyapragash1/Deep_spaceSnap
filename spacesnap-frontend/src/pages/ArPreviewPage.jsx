@@ -1,20 +1,20 @@
-// src/pages/PortfolioPage.jsx
+// src/pages/ArPreviewPage.jsx
 import React from 'react';
 import MainLayout from '../components/layout/MainLayout';
 
-const PortfolioPage = () => {
+const ArPreviewPage = () => {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 py-16 text-center">
                 <h1 className="text-4xl md:text-5xl font-bold text-primary-teal mb-4">
-                    Designer Portfolios
+                    Augmented Reality Preview
                 </h1>
                 <p className="text-lg text-gray-700">
-                    Browse inspiring designs and connect with professional interior designers.
+                    This feature is coming soon! Use your phone's camera to place 3D furniture right in your room.
                 </p>
             </div>
         </MainLayout>
     );
 };
 
-export default PortfolioPage;
+export default ArPreviewPage;
