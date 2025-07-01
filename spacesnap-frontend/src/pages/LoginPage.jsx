@@ -1,29 +1,53 @@
 // src/pages/LoginPage.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import MainLayout from '../components/layout/MainLayout';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import Button from '../components/common/Button';
 
 const LoginPage = () => {
-    const { login } = useAuth();
     const navigate = useNavigate();
+    const { login } = useAuth(); // We will use the new login function from our context
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [error, setError] = useState('');
 
-    const handleLogin = () => {
-        // Use the mock login function from our AuthContext
-        login();
-        // After logging in, redirect the user to their dashboard
-        navigate('/dashboard');
+    const { email, password } = formData;
+    const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    const onSubmit = async e => {
+        e.preventDefault();
+        try {
+            await login(email, password); // Call the context's login function
+            navigate('/dashboard'); // Redirect to dashboard gateway on success
+        } catch (err) {
+            setError(err.message); // The context will handle passing the error message
+        }
     };
 
     return (
         <MainLayout>
-            <div className="container mx-auto px-4 py-16 text-center">
-                <h1 className="text-4xl font-bold mb-4">Login</h1>
-                <p className="text-gray-600 mb-8">This is a placeholder login page. Click the button to simulate logging in as a user.</p>
-                <Button onClick={handleLogin} className="px-8 py-3 text-lg">
-                    Log In (as a mock user)
-                </Button>
+            <div className="container mx-auto px-4 py-16 flex justify-center">
+                 <div className="w-full max-w-md">
+                    <form onSubmit={onSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                        <h1 className="text-3xl font-bold mb-6 text-center">Log In</h1>
+                        {error && <p className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</p>}
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">Email Address</label>
+                            <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="email" type="email" name="email" value={email} onChange={onChange} required />
+                        </div>
+                        <div className="mb-6">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">Password</label>
+                            <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="password" type="password" name="password" value={password} onChange={onChange} required />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <button className="bg-primary-teal hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                                Sign In
+                            </button>
+                            <Link className="inline-block align-baseline font-bold text-sm text-primary-teal hover:text-opacity-80" to="/register">
+                                Don't have an account?
+                            </Link>
+                        </div>
+                    </form>
+                </div>
             </div>
         </MainLayout>
     );
