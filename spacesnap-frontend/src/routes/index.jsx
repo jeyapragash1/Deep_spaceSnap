@@ -1,53 +1,51 @@
 // src/routes/index.jsx
-
 import { Routes, Route } from 'react-router-dom';
 
-// --- Our custom routing tools ---
+// --- Custom Routing Tools & Public Pages ---
 import ProtectedRoute from './ProtectedRoute';
 import DashboardGatewayPage from '../pages/DashboardGatewayPage';
-
-// --- Page Components ---
 import LandingPage from '../pages/LandingPage';
-import StyleQuizPage from '../pages/StyleQuizPage';
-import AiVisualizerPage from '../pages/AiVisualizerPage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
-import UpgradePage from '../pages/UpgradePage';
-// --- THIS IS THE UPDATE: Import the new pages ---
-import ArPreviewPage from '../pages/ArPreviewPage';
-import PortfolioPage from '../pages/PortfolioPage';
+import StyleQuizPage from '../pages/StyleQuizPage';
+import AiVisualizerPage from '../pages/AiVisualizerPage';
 
-// --- Dashboard Components ---
+// --- DASHBOARD PAGES (All imported from the SAME folder) ---
 import AdminDashboardPage from '../pages/dashboards/AdminDashboardPage';
+import UserManagementPage from '../pages/dashboards/UserManagementPage';
 import DesignerDashboardPage from '../pages/dashboards/DesignerDashboardPage';
 import UserProfilePage from '../pages/dashboards/UserProfilePage';
+// Import other dashboard pages as you create them...
+// import DesignerApprovalsPage from '../pages/dashboards/DesignerApprovalsPage';
 
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* === PUBLIC ROUTES (Accessible to everyone) === */}
+      {/* === PUBLIC ROUTES === */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
-      
-      {/* === SEMI-PROTECTED / FEATURE ROUTES === */}
       <Route path="/style-quiz" element={<StyleQuizPage />} />
       <Route path="/visualizer" element={<AiVisualizerPage />} />
-      {/* --- THIS IS THE UPDATE: Add the new routes here --- */}
-      <Route path="/ar-preview" element={<ArPreviewPage />} />
-      <Route path="/portfolio" element={<PortfolioPage />} />
       
       {/* === GATEWAY ROUTE === */}
       <Route path="/dashboard" element={<DashboardGatewayPage />} />
 
-      {/* === PROTECTED ROUTES (Require login and specific roles) === */}
+      {/* === PROTECTED ROUTES (Your original, working structure) === */}
+      {/* Admin Routes */}
       <Route 
         path="/admin/dashboard" 
         element={ <ProtectedRoute allowedRoles={['admin']}><AdminDashboardPage /></ProtectedRoute> } 
       />
+      <Route 
+        path="/admin/users" 
+        element={ <ProtectedRoute allowedRoles={['admin']}><UserManagementPage /></ProtectedRoute> } 
+      />
+      
+      {/* Designer & User Routes */}
       <Route 
         path="/designer/dashboard" 
         element={ <ProtectedRoute allowedRoles={['designer']}><DesignerDashboardPage /></ProtectedRoute> } 
@@ -55,10 +53,6 @@ const AppRoutes = () => {
       <Route 
         path="/user/profile" 
         element={ <ProtectedRoute allowedRoles={['registered', 'premium']}><UserProfilePage /></ProtectedRoute> } 
-      />
-      <Route 
-        path="/upgrade" 
-        element={ <ProtectedRoute allowedRoles={['registered']}><UpgradePage /></ProtectedRoute> } 
       />
       
     </Routes>

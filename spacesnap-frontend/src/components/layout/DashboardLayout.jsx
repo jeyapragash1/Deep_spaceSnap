@@ -1,23 +1,31 @@
-// src/components/layout/DashboardLayout.jsx
-import React from 'react';
-import Sidebar from './Sidebar';
-import Header from './Header1';
-import { useAuth } from '../../context/AuthContext';
+// src/components/layout/AdminDashboardLayout.jsx
 
-const DashboardLayout = ({ children }) => {
-    const { user } = useAuth();
-    
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+
+// --- THIS IS THE CRUCIAL FIX ---
+// We now import the sidebar from the SAME folder ('./').
+// This is the simple and correct path.
+import AdminSidebar from './AdminSidebar';
+import DashboardHeader from './DashboardHeader'; // This should also be in the 'layout' folder
+
+const AdminDashboardLayout = ({ children }) => {
     return (
         <div className="flex h-screen bg-neutral-light">
-            <Sidebar userRole={user?.role} />
+            <AdminSidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <Header />
+                <DashboardHeader />
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-neutral-light p-6">
-                    {children}
+                    {/* 
+                      This Outlet component is used for nested routing.
+                      It renders the specific page content (e.g., User Management).
+                      We pass 'children' as a fallback for your flat routing structure.
+                    */}
+                    {children || <Outlet />}
                 </main>
             </div>
         </div>
     );
 };
 
-export default DashboardLayout;
+export default AdminDashboardLayout;
