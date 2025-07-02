@@ -28,11 +28,11 @@ const Footer = () => {
         {/* Quick Links */}
         <div>
           <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-          <ul>
-            <li className="mb-2"><Link to="/visualizer" className="text-gray-400 hover:text-white transition-colors">AI Visualizer</Link></li>
-            <li className="mb-2"><Link to="/ar-preview" className="text-gray-400 hover:text-white transition-colors">AR Preview</Link></li>
+          <ul>      
             <li className="mb-2"><Link to="/style-quiz" className="text-gray-400 hover:text-white transition-colors">Style Quiz</Link></li>
-            <li className="mb-2"><Link to="/dashboard" className="text-gray-400 hover:text-white transition-colors">Dashboard</Link></li>
+            <li className="mb-2"><Link to="/visualizer" className="text-gray-400 hover:text-white transition-colors">Room Visualizer</Link></li>
+            <li className="mb-2"><Link to="/ar-preview" className="text-gray-400 hover:text-white transition-colors">AR Preview</Link></li>
+            <li className="mb-2"><Link to="/portfolio" className="text-gray-400 hover:text-white transition-colors">Portfolio</Link></li>
           </ul>
         </div>
 

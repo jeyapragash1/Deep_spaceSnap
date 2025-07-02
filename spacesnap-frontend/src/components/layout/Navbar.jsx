@@ -16,10 +16,11 @@ const Navbar = () => {
   // The complete list of navigation items
   const navItems = [
     { name: "Home", path: "/" },
+    { name: "Portfolio", path: "/portfolio" },
     { name: "Style Quiz", path: "/style-quiz" },
     { name: "Room Visualizer", path: "/visualizer" },
     { name: "AR Preview", path: "/ar-preview" },
-    { name: "Portfolio", path: "/portfolio" },
+    
   ];
 
   useEffect(() => {
