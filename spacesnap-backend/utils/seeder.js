@@ -2,11 +2,13 @@
 
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const bcrypt = require('bcryptjs'); // For hashing passwords
+const bcrypt = require('bcryptjs');
+const path = require('path'); // Import Node.js's built-in path module
 
-// --- THIS IS THE MOST IMPORTANT FIX ---
-// Load environment variables from the .env file FIRST.
-dotenv.config();
+// --- THIS IS THE GUARANTEED FIX ---
+// This tells dotenv to look for the .env file in the parent directory
+// (the root of your 'spacesnap-backend' project). This is a robust method.
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Load the User model
 const User = require('../models/User');
@@ -14,7 +16,10 @@ const User = require('../models/User');
 // --- DATABASE CONNECTION LOGIC (for this script only) ---
 const connectDB = async () => {
   try {
-    // We use the same working .env file from your main server
+    // Check if the environment variable was loaded correctly
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI not found in .env file. Ensure the file is in the root of the backend project.');
+    }
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Seeder connected to MongoDB...');
   } catch (err) {
@@ -25,21 +30,20 @@ const connectDB = async () => {
 
 // --- DATA TO BE IMPORTED ---
 const createUsers = async () => {
-  // Hash the password before creating the user
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash('123456', salt); // Simple password '123456' for both
+  // Simple password '123456' for both users
+  const password = '123456';
 
   const users = [
     {
       name: 'Admin User',
       email: 'admin@spacesnap.com',
-      password: hashedPassword,
+      password: password, // The pre-save hook in the User model will hash this
       role: 'admin',
     },
     {
       name: 'Designer User',
       email: 'designer@spacesnap.com',
-      password: hashedPassword,
+      password: password,
       role: 'designer',
     },
   ];
@@ -49,11 +53,16 @@ const createUsers = async () => {
 // --- FUNCTION TO IMPORT DATA ---
 const importData = async () => {
   try {
-    // First, delete any existing users to avoid duplicates
-    await User.deleteMany();
+    // First, delete any existing admin/designer users to avoid duplicates
+    await User.deleteMany({ email: { $in: ['admin@spacesnap.com', 'designer@spacesnap.com'] } });
 
     const usersToImport = await createUsers();
-    await User.insertMany(usersToImport);
+    // The .save() method is not needed here, insertMany is fine, but the model hook will not run.
+    // Let's create and save them individually to ensure the hashing hook fires.
+    for (const userData of usersToImport) {
+        const user = new User(userData);
+        await user.save();
+    }
 
     console.log('✅ Data Imported Successfully!');
     process.exit();
@@ -66,7 +75,7 @@ const importData = async () => {
 // --- FUNCTION TO DESTROY DATA ---
 const destroyData = async () => {
   try {
-    await User.deleteMany();
+    await User.deleteMany({ email: { $in: ['admin@spacesnap.com', 'designer@spacesnap.com'] } });
     console.log('✅ Data Destroyed Successfully!');
     process.exit();
   } catch (error) {
@@ -80,7 +89,6 @@ const destroyData = async () => {
 const runSeeder = async () => {
   await connectDB();
   
-  // This allows you to run "node utils/seeder.js -d" to destroy data
   if (process.argv[2] === '-d') {
     await destroyData();
   } else {

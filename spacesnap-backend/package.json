@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "seed": "node utils/seeder.js",
+    "seed:import": "node utils/seeder.js",
     "seed:destroy": "node utils/seeder.js -d"
   },
   "keywords": [],
@@ -18,6 +18,7 @@
     "express": "^4.19.2",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.3.2"
+    "mongoose": "^8.3.2",
+    "nodemailer": "^7.0.4"
   }
 }

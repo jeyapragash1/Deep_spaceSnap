@@ -1,47 +1,30 @@
-// src/routes/ProtectedRoute.jsx
+// src/routes/ProtectedLayout.jsx
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import LoadingSpinner from '../components/common/LoadingSpinner'; // We will use this for a nice loading effect
+import LoadingSpinner from '../components/common/LoadingSpinner'; // Make sure you have this component
 
-// This component will wrap our dashboard pages
-// It takes 'children' (the page we want to show) and 'allowedRoles' as props
-const ProtectedRoute = ({ children, allowedRoles }) => {
-    const { user, isAuthenticated } = useAuth();
-    
-    // --- This part is important for the initial page load ---
-    // If the authentication state is still loading, 'user' might be null briefly.
-    // In a real app with an async check, you'd have a 'loading' state.
-    // For our mock context, this is a simple check.
-    const isLoading = user === undefined; 
+const ProtectedLayout = () => {
+    const { isAuthenticated, isLoading } = useAuth();
+    const location = useLocation();
 
+    // 1. Show a full-screen loading spinner while the AuthContext is checking for a token.
     if (isLoading) {
-        // Show a full-page loading spinner while we determine the user's auth state
         return (
-            <div className="flex items-center justify-center h-screen">
+            <div className="flex items-center justify-center h-screen bg-neutral-light">
                 <LoadingSpinner size="lg" />
             </div>
         );
     }
     
-    // 1. Check if the user is authenticated (logged in)
+    // 2. If finished loading and the user is NOT authenticated, redirect them to the login page.
     if (!isAuthenticated) {
-        // If not logged in, redirect them to the login page
-        // We also pass the page they tried to visit, so we can redirect them back after login.
-        console.log("Access Denied: User not authenticated. Redirecting to /login.");
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // 2. Check if the user has one of the allowed roles
-    if (allowedRoles && !allowedRoles.includes(user.role)) {
-        // If the user's role is not in the allowed list, redirect them to a "not authorized" page
-        // or back to their own dashboard.
-        console.log(`Access Denied: User role '${user.role}' is not in allowed roles [${allowedRoles}]. Redirecting to /unauthorized.`);
-        return <Navigate to="/unauthorized" replace />;
-    }
-
-    // 3. If all checks pass, render the page they requested
-    return children;
+    // 3. If the user IS authenticated, render the child route they requested.
+    // <Outlet /> is a special component that acts as a placeholder for nested routes.
+    return <Outlet />;
 };
 
-export default ProtectedRoute;
+export default ProtectedLayout;

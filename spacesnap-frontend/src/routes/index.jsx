@@ -1,122 +1,110 @@
 // src/routes/index.jsx
+import React from 'react';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
-import { Routes, Route } from 'react-router-dom';
-
-// --- Custom Routing Components ---
-import ProtectedRoute from './ProtectedRoute';
-import DashboardGatewayPage from '../pages/DashboardGatewayPage';
-
-// --- Main Layout Components ---
+// Layouts
+import MainLayout from '../components/layout/MainLayout';
 import AdminDashboardLayout from '../components/layout/AdminDashboardLayout';
 import UserDashboardLayout from '../components/layout/UserDashboardLayout';
 
-// --- Public Page Components ---
+// Public Pages
 import LandingPage from '../pages/LandingPage';
-import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
-import UnauthorizedPage from '../pages/UnauthorizedPage';
 import AboutPage from '../pages/AboutPage';
 import ContactPage from '../pages/ContactPage';
 import PortfolioPage from '../pages/PortfolioPage';
 import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
 import TermsOfServicePage from '../pages/TermsOfServicePage';
 
-// --- Core Feature Page Components ---
-import StyleQuizPage from '../pages/StyleQuizPage';
+// Auth Pages
+import LoginPage from '../pages/LoginPage';
+import RegisterPage from '../pages/RegisterPage';
+import OtpVerificationPage from '../pages/OtpVerificationPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
+import UnauthorizedPage from '../pages/UnauthorizedPage';
+
+// Protected Feature Pages
+import StyleQuizPage from '../pages/StyleQuizPage'; 
 import AiVisualizerPage from '../pages/AiVisualizerPage';
 import ArPreviewPage from '../pages/ArPreviewPage';
 import UpgradePage from '../pages/UpgradePage';
 
-// --- Dashboard Content Page Components (Now they all exist) ---
+// Dashboard Content Pages
 import AdminDashboardOverview from '../pages/dashboards/admin/AdminDashboardOverview';
 import UserManagement from '../pages/dashboards/admin/UserManagement';
-import UserProfilePage from '../pages/dashboards/UserProfilePage';
 import DesignerDashboardPage from '../pages/dashboards/DesignerDashboardPage';
+import UserProfilePage from '../pages/dashboards/UserProfilePage';
 
+// --- ROUTING LOGIC COMPONENTS (Self-contained) ---
 
+const ProtectedRouteLogic = () => {
+    const { isAuthenticated, isLoading } = useAuth();
+    const location = useLocation();
+    if (isLoading) return <div className="flex items-center justify-center h-screen"><LoadingSpinner size="lg" /></div>;
+    if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Outlet />;
+};
+
+const DashboardGateway = () => {
+    const { user } = useAuth();
+    switch (user?.role) {
+        case 'admin': return <Navigate to="/admin" replace />;
+        case 'designer': return <Navigate to="/designer/dashboard" replace />;
+        default: return <Navigate to="/user/profile" replace />;
+    }
+};
+
+// --- MAIN ROUTER ---
 const AppRoutes = () => {
-  return (
-    <Routes>
-      {/* ======================================================= */}
-      {/* === PUBLIC ROUTES (Accessible to all, no login needed) === */}
-      {/* ======================================================= */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/portfolio" element={<PortfolioPage />} />
-      <Route path="/privacy" element={<PrivacyPolicyPage />} />
-      <Route path="/terms" element={<TermsOfServicePage />} />
-      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+    return (
+        <Routes>
+            {/* === Public Routes (Use MainLayout) === */}
+            <Route element={<MainLayout><Outlet /></MainLayout>}>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/portfolio" element={<PortfolioPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms" element={<TermsOfServicePage />} />
+            </Route>
 
+            {/* === Auth Routes (Have their own layout) === */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/verify-otp/:userId" element={<OtpVerificationPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:resettoken" element={<ResetPasswordPage />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-      {/* ========================================================== */}
-      {/* === PROTECTED CORE FEATURE ROUTES (Must be logged in) === */}
-      {/* ========================================================== */}
-      <Route path="/style-quiz" element={<ProtectedRoute><StyleQuizPage /></ProtectedRoute>} />
-      <Route path="/visualizer" element={<ProtectedRoute><AiVisualizerPage /></ProtectedRoute>} />
-      <Route path="/ar-preview" element={<ProtectedRoute><ArPreviewPage /></ProtectedRoute>} />
+            {/* === PROTECTED ROUTES GROUP === */}
+            <Route element={<ProtectedRouteLogic />}>
+                <Route path="/dashboard" element={<DashboardGateway />} />
+                
+                {/* Protected features also get the MainLayout */}
+                <Route element={<MainLayout><Outlet /></MainLayout>}>
+                    <Route path="/style-quiz" element={<StyleQuizPage />} />
+                    <Route path="/visualizer" element={<AiVisualizerPage />} />
+                    <Route path="/ar-preview" element={<ArPreviewPage />} />
+                </Route>
+                
+                <Route path="/upgrade" element={<UpgradePage />} />
 
+                <Route path="/admin" element={<AdminDashboardLayout />}>
+                    <Route index element={<AdminDashboardOverview />} />
+                    <Route path="users" element={<UserManagement />} />
+                </Route>
 
-      {/* ======================================================= */}
-      {/* === DASHBOARD GATEWAY (Redirects based on user role) === */}
-      {/* ======================================================= */}
-      <Route 
-        path="/dashboard" 
-        element={
-          <ProtectedRoute allowedRoles={['registered', 'premium', 'designer', 'admin']}>
-            <DashboardGatewayPage />
-          </ProtectedRoute>
-        } 
-      />
-
-
-      {/* =================================================================== */}
-      {/* === USER & DESIGNER DASHBOARD (Nested inside UserDashboardLayout) === */}
-      {/* =================================================================== */}
-      <Route 
-        element={
-          <ProtectedRoute allowedRoles={['registered', 'premium', 'designer']}>
-            <UserDashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/user/profile" element={<UserProfilePage />} />
-        <Route path="/designer/dashboard" element={<DesignerDashboardPage />} />
-      </Route>
-
-      
-      {/* ============================================================ */}
-      {/* === ADMIN DASHBOARD (Nested inside AdminDashboardLayout) === */}
-      {/* ============================================================ */}
-      <Route 
-        path="/admin" 
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminDashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<AdminDashboardOverview />} />
-        <Route path="users" element={<UserManagement />} />
-      </Route>
-
-      
-      {/* ============================================================== */}
-      {/* === SPECIAL ROUTES (like the upgrade page for specific roles) === */}
-      {/* ============================================================== */}
-      <Route 
-        path="/upgrade" 
-        element={
-          <ProtectedRoute allowedRoles={['registered']}>
-            <UpgradePage />
-          </ProtectedRoute>
-        } 
-      />
-
-    </Routes>
-  );
+                <Route path="/user" element={<UserDashboardLayout />}>
+                    <Route path="profile" element={<UserProfilePage />} />
+                </Route>
+                <Route path="/designer" element={<UserDashboardLayout />}>
+                    <Route path="dashboard" element={<DesignerDashboardPage />} />
+                </Route>
+            </Route>
+        </Routes>
+    );
 };
 
 export default AppRoutes;
