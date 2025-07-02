@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Register a new user
+// @route   POST api/users/register
+// @desc    Register a new user
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -14,9 +15,15 @@ router.post('/register', async (req, res) => {
     if (user) {
       return res.status(400).json({ msg: 'User already exists' });
     }
+    
+    // Create a new user instance. The password is still plain text here.
     user = new User({ name, email, password });
-    // The pre-save hook in the model will hash the password automatically
+    
+    // When we call .save(), the pre-save hook in your User.js model
+    // will AUTOMATICALLY hash the password before it hits the database.
     await user.save();
+    
+    // Create the JWT token
     const payload = { user: { id: user.id, role: user.role, name: user.name } };
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' }, (err, token) => {
       if (err) throw err;
@@ -28,7 +35,8 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Authenticate user & get token (login)
+// @route   POST api/users/login
+// @desc    Authenticate user & get token (login)
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -51,7 +59,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Upgrade user role to premium
+// @route   PUT api/users/upgrade-to-premium
+// @desc    Upgrade user role to premium
 router.put('/upgrade-to-premium', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
