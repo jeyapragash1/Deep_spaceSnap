@@ -1,4 +1,5 @@
 // src/pages/dashboards/admin/DesignerApprovals.jsx
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaCheck, FaTimes } from 'react-icons/fa';
@@ -13,9 +14,10 @@ const DesignerApprovals = () => {
         try {
             setLoading(true);
             const res = await axios.get('http://localhost:5000/api/designers/pending');
+            // We assume pending designers are users with the 'registered' role
             setPending(res.data);
         } catch (err) {
-            setError('Failed to fetch pending applications.');
+            setError('Failed to fetch pending applications. Please ensure you are logged in as an admin.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -29,7 +31,7 @@ const DesignerApprovals = () => {
 
     // Handler for the "Approve" button
     const handleApprove = async (userId) => {
-        if (window.confirm('Are you sure you want to approve this designer?')) {
+        if (window.confirm('Are you sure you want to approve this designer? Their role will be changed to "designer".')) {
             try {
                 await axios.put(`http://localhost:5000/api/designers/approve/${userId}`);
                 // Refresh the list by filtering out the approved user
@@ -43,7 +45,7 @@ const DesignerApprovals = () => {
 
     // Handler for the "Reject" button
     const handleReject = async (userId) => {
-        if (window.confirm('Are you sure you want to reject and delete this application?')) {
+        if (window.confirm('Are you sure you want to reject and delete this application? This action cannot be undone.')) {
             try {
                 await axios.put(`http://localhost:5000/api/designers/reject/${userId}`);
                 // Refresh the list by filtering out the rejected user
@@ -60,11 +62,11 @@ const DesignerApprovals = () => {
             <h1 className="text-3xl font-bold text-neutral-dark mb-6">Pending Designer Approvals</h1>
             
             {loading && <p>Loading applications...</p>}
-            {error && <p className="text-red-500">{error}</p>}
+            {error && <p className="text-red-500 bg-red-100 p-4 rounded-md">{error}</p>}
 
-            {!loading && pending.length === 0 && (
+            {!loading && pending.length === 0 && !error && (
                 <div className="bg-white p-6 rounded-lg shadow-md text-center">
-                    <p className="text-gray-500">There are no pending designer applications.</p>
+                    <p className="text-gray-500">There are no pending designer applications at this time.</p>
                 </div>
             )}
 

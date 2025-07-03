@@ -37,6 +37,10 @@ import UserManagement from '../pages/dashboards/admin/UserManagement';
 import DesignerDashboardPage from '../pages/dashboards/DesignerDashboardPage';
 import UserProfilePage from '../pages/dashboards/UserProfilePage';
 
+// --- THIS IS THE NEW IMPORT ---
+import DesignerApprovals from '../pages/dashboards/admin/DesignerApprovals';
+
+
 // --- ROUTING LOGIC COMPONENTS (Self-contained) ---
 
 const ProtectedRouteLogic = () => {
@@ -94,6 +98,8 @@ const AppRoutes = () => {
                 <Route path="/admin" element={<AdminDashboardLayout />}>
                     <Route index element={<AdminDashboardOverview />} />
                     <Route path="users" element={<UserManagement />} />
+                    {/* --- THIS IS THE NEW LINE --- */}
+                    <Route path="approvals" element={<DesignerApprovals />} />
                 </Route>
 
                 <Route path="/user" element={<UserDashboardLayout />}>

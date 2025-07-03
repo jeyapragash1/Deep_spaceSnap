@@ -1,26 +1,42 @@
 // spacesnap-backend/routes/designerRoutes.js
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User'); // We are still using the User model
-const auth = require('../middleware/authMiddleware'); // We'll need this later to protect routes
+const User = require('../models/User');
+const auth = require('../middleware/authMiddleware');
 
-// A helper middleware to check if the user is an admin
-const adminOnly = (req, res, next) => {
-    // Note: We would get the role from req.user.role after implementing real auth
-    // For now, we will assume the check passes. In the future, you'd add:
-    // if (req.user.role !== 'admin') {
-    //     return res.status(403).json({ msg: 'Access denied: Admins only' });
-    // }
-    next();
+// A helper middleware to check if the logged-in user is an admin
+const adminOnly = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (user.role !== 'admin') {
+            return res.status(403).json({ msg: 'Access denied: Admins only' });
+        }
+        next();
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
 };
 
+// @route   GET api/designers
+// @desc    Get a list of all APPROVED designers (for the consultation form)
+// @access  Public
+router.get('/', async (req, res) => {
+    try {
+        const designers = await User.find({ role: 'designer' }).select('name');
+        res.json(designers);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/designers/pending
-// @desc    Get all users who have applied to be designers (e.g., role is 'registered' but has a portfolio)
+// @desc    Get all users who are pending designer approval
 // @access  Admin
 router.get('/pending', auth, adminOnly, async (req, res) => {
     try {
-        // For this example, we will just find users with the role 'registered'
-        // In a real app, you might have a 'wantsToBeDesigner: true' flag
+        // We will find users with the 'registered' role as a proxy for pending designers.
+        // In a real app, you might add a field like 'applicationStatus: "pending"'
         const pendingDesigners = await User.find({ role: 'registered' }).select('-password');
         res.json(pendingDesigners);
     } catch (err) {
@@ -30,18 +46,19 @@ router.get('/pending', auth, adminOnly, async (req, res) => {
 });
 
 // @route   PUT api/designers/approve/:id
-// @desc    Approve a designer by changing their role
+// @desc    Approve a pending designer by changing their role
 // @access  Admin
 router.put('/approve/:id', auth, adminOnly, async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { role: 'designer' },
+            { new: true }
+        ).select('-password');
+
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
         }
-        
-        user.role = 'designer';
-        await user.save();
-        
         res.json({ msg: 'Designer approved successfully', user });
     } catch (err) {
         console.error(err.message);
@@ -50,11 +67,12 @@ router.put('/approve/:id', auth, adminOnly, async (req, res) => {
 });
 
 // @route   PUT api/designers/reject/:id
-// @desc    Reject a designer (could delete them or set a 'rejected' status)
+// @desc    Reject a designer application
 // @access  Admin
 router.put('/reject/:id', auth, adminOnly, async (req, res) => {
     try {
-        // For simplicity, we'll just delete the user application
+        // For simplicity, we'll just delete the user.
+        // In a real app, you might change their status to 'rejected'.
         const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
