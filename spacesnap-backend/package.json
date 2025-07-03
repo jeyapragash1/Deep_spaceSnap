@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
-  "scripts": {
+ "scripts": {
     "start": "node server.js",
     "seed:import": "node utils/seeder.js",
     "seed:destroy": "node utils/seeder.js -d"

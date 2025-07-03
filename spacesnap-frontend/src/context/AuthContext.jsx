@@ -24,7 +24,10 @@ export const AuthProvider = ({ children }) => {
             try {
                 const decoded = jwtDecode(token);
                 if (decoded.exp * 1000 < Date.now()) { setToken(null); }
-                else { setUser(decoded.user); }
+                else { 
+                    // This line correctly sets the full user object from the token
+                    setUser(decoded.user); 
+                }
             } catch (error) { setToken(null); }
         } else {
             localStorage.removeItem('spaceSnapToken');
@@ -37,7 +40,6 @@ export const AuthProvider = ({ children }) => {
         try {
             const res = await axios.post('http://localhost:5000/api/users/login', { email, password });
             setToken(res.data.token);
-            // After setting token, redirect
             const from = location.state?.from?.pathname || "/dashboard";
             navigate(from, { replace: true });
         } catch (err) {

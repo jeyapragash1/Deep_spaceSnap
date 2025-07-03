@@ -36,9 +36,9 @@ import AdminDashboardOverview from '../pages/dashboards/admin/AdminDashboardOver
 import UserManagement from '../pages/dashboards/admin/UserManagement';
 import DesignerDashboardPage from '../pages/dashboards/DesignerDashboardPage';
 import UserProfilePage from '../pages/dashboards/UserProfilePage';
-
-// --- THIS IS THE NEW IMPORT ---
 import DesignerApprovals from '../pages/dashboards/admin/DesignerApprovals';
+import ContentModeration from '../pages/dashboards/admin/ContentModeration';
+import SystemSettings from '../pages/dashboards/admin/SystemSettings';
 
 
 // --- ROUTING LOGIC COMPONENTS (Self-contained) ---
@@ -86,7 +86,6 @@ const AppRoutes = () => {
             <Route element={<ProtectedRouteLogic />}>
                 <Route path="/dashboard" element={<DashboardGateway />} />
                 
-                {/* Protected features also get the MainLayout */}
                 <Route element={<MainLayout><Outlet /></MainLayout>}>
                     <Route path="/style-quiz" element={<StyleQuizPage />} />
                     <Route path="/visualizer" element={<AiVisualizerPage />} />
@@ -98,8 +97,9 @@ const AppRoutes = () => {
                 <Route path="/admin" element={<AdminDashboardLayout />}>
                     <Route index element={<AdminDashboardOverview />} />
                     <Route path="users" element={<UserManagement />} />
-                    {/* --- THIS IS THE NEW LINE --- */}
                     <Route path="approvals" element={<DesignerApprovals />} />
+                    <Route path="content" element={<ContentModeration />} />
+                    <Route path="settings" element={<SystemSettings />} />
                 </Route>
 
                 <Route path="/user" element={<UserDashboardLayout />}>
