@@ -1,4 +1,3 @@
-// src/pages/LandingPage.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
