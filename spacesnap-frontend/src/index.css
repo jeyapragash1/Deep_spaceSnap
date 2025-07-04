@@ -3,3 +3,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* ... your existing @tailwind directives ... */
+
+.ar-button {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border: none;
+  background-color: #f59e0b; /* accent-gold */
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 100;
+}
