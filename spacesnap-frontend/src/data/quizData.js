@@ -1,98 +1,99 @@
 // src/data/quizData.js
 
-const imageSource = 'https://source.unsplash.com/random/800x600?';
+// --- We import all your local images ---
+import img1 from '../assets/images/1.jpg'; import img2 from '../assets/images/2.jpg';
+import img3 from '../assets/images/3.jpg'; import img4 from '../assets/images/4.jpg';
+import img5 from '../assets/images/5.jpg'; import img6 from '../assets/images/6.jpg';
+import img7 from '../assets/images/7.jpg'; import img8 from '../assets/images/8.jpg';
+import img9 from '../assets/images/9.jpg'; import img10 from '../assets/images/10.jpg';
+import img11 from '../assets/images/11.jpg'; import img12 from '../assets/images/12.jpg';
+import img13 from '../assets/images/13.jpg'; import img14 from '../assets/images/14.jpg';
+import img15 from '../assets/images/15.jpg'; import img16 from '../assets/images/16.jpg';
+import img17 from '../assets/images/17.jpg'; import img18 from '../assets/images/18.jpg';
+import img19 from '../assets/images/19.jpg'; import img20 from '../assets/images/20.jpg';
 
+// --- The Quiz Questions (This part is already correct) ---
 export const quizQuestions = {
-  // --- The quiz questions from the previous step remain unchanged ---
-  'start': {
-    question: "First, let's get a feel for your style. Pick an image that you're most drawn to.",
-    type: 'image',
-    answers: [
-      { image: `${imageSource}modern,minimalist,interior`, stylePoints: { modern: 3, minimalist: 2 }, nextQuestion: 'age' },
-      { image: `${imageSource}bohemian,livingroom,plants`, stylePoints: { bohemian: 3, rustic: 2 }, nextQuestion: 'age' },
-      { image: `${imageSource}classic,elegant,interior`, stylePoints: { traditional: 3, classic: 2 }, nextQuestion: 'age' },
-      { image: `${imageSource}industrial,loft,brick,interior`, stylePoints: { industrial: 3, modern: 1 }, nextQuestion: 'age' },
-    ],
-  },
-  // ... all other questions remain here ...
-  'age': {
-    question: "What is your current age range?",
-    type: 'text',
-    answers: [
-      { text: "Under 25", stylePoints: { student: 3, modern: 1 }, nextQuestion: 'profession_student' },
-      { text: "25 - 40", stylePoints: { professional: 3, contemporary: 1 }, nextQuestion: 'profession_professional' },
-      { text: "40+", stylePoints: { established: 3, traditional: 1 }, nextQuestion: 'room_purpose' },
-    ],
-  },
-  'profession_student': {
-    question: "What's your main goal for this space?",
-    type: 'text',
-    answers: [
-        { text: "A focused study area.", stylePoints: { minimalist: 2, functional: 3 }, nextQuestion: 'room_purpose' },
-        { text: "A relaxing space to hang out with friends.", stylePoints: { bohemian: 2, cozy: 3 }, nextQuestion: 'room_purpose' },
-        { text: "A creative studio for my hobbies.", stylePoints: { eclectic: 2, creative: 3 }, nextQuestion: 'room_purpose' },
-    ]
-  },
-  'profession_professional': {
-    question: "What field do you work in?",
-    type: 'text',
-    answers: [
-      { text: "Tech / Engineering", stylePoints: { modern: 2, tech: 3 }, nextQuestion: 'room_purpose' },
-      { text: "Creative / Arts", stylePoints: { eclectic: 2, creative: 3 }, nextQuestion: 'room_purpose' },
-      { text: "Business / Finance", stylePoints: { traditional: 2, professional: 2 }, nextQuestion: 'room_purpose' },
-      { text: "Other", stylePoints: {}, nextQuestion: 'room_purpose' },
-    ]
-  },
-  'room_purpose': {
-    question: "What is the primary function of this room?",
-    type: 'text',
-    answers: [
-      { text: "Living Room - for relaxation and entertainment.", stylePoints: { cozy: 2, contemporary: 1 }, nextQuestion: 'color_preference' },
-      { text: "Bedroom - a personal sanctuary.", stylePoints: { minimalist: 1, serene: 2 }, nextQuestion: 'color_preference' },
-      { text: "Home Office - for productivity.", stylePoints: { functional: 3, modern: 1 }, nextQuestion: 'color_preference' },
-    ],
-  },
-  'color_preference': {
-    question: "Which color palette do you prefer?",
-    type: 'text',
-    answers: [
-      { text: "Cool neutrals: Grays, whites, and blacks.", stylePoints: { modern: 3, minimalist: 2 }, nextQuestion: null },
-      { text: "Warm & earthy: Browns, greens, and terracotta.", stylePoints: { bohemian: 3, rustic: 2 }, nextQuestion: null },
-      { text: "Vibrant & bold: Deep blues, rich reds, etc.", stylePoints: { eclectic: 3, maximalist: 2 }, nextQuestion: null },
-      { text: "Soft pastels: Light pinks, baby blues, etc.", stylePoints: { scandinavian: 3, shabbyChic: 2 }, nextQuestion: null },
-    ],
-  },
+    'start': {
+        question: "Which of these rooms feels most like a place you'd love to relax in?", type: 'image',
+        answers: [ { image: img1, stylePoints: { modern: 3, minimalist: 2 }, nextQuestion: 'q2_palette' }, { image: img2, stylePoints: { bohemian: 3, eclectic: 2 }, nextQuestion: 'q2_palette' }, { image: img3, stylePoints: { traditional: 3, rustic: 1 }, nextQuestion: 'q2_palette' }, { image: img4, stylePoints: { industrial: 3, modern: 1 }, nextQuestion: 'q2_palette' }, ],
+    },
+    'q2_palette': {
+        question: "Which color palette are you most drawn to?", type: 'image',
+        answers: [ { image: img5, stylePoints: { modern: 2, minimalist: 2 }, nextQuestion: 'q3_materials' }, { image: img6, stylePoints: { bohemian: 2, rustic: 2 }, nextQuestion: 'q3_materials' }, { image: img7, stylePoints: { traditional: 2, classic: 1 }, nextQuestion: 'q3_materials' }, { image: img8, stylePoints: { scandinavian: 2, coastal: 2 }, nextQuestion: 'q3_materials' }, ],
+    },
+    'q3_materials': {
+        question: "Pick the texture that appeals to you most.", type: 'image',
+        answers: [ { image: img9, stylePoints: { industrial: 2, rustic: 2 }, nextQuestion: 'q4_furniture' }, { image: img10, stylePoints: { modern: 2, minimalist: 1 }, nextQuestion: 'q4_furniture' }, { image: img11, stylePoints: { bohemian: 2, scandinavian: 1 }, nextQuestion: 'q4_furniture' }, { image: img12, stylePoints: { traditional: 2, classic: 2 }, nextQuestion: 'q4_furniture' }, ]
+    },
+    'q4_furniture': {
+        question: "Which piece of furniture best fits your style?", type: 'image',
+        answers: [ { image: img13, stylePoints: { modern: 3, minimalist: 1 }, nextQuestion: 'q5_art' }, { image: img14, stylePoints: { rustic: 3, industrial: 1 }, nextQuestion: 'q5_art' }, { image: img15, stylePoints: { bohemian: 3, eclectic: 1 }, nextQuestion: 'q5_art' }, { image: img16, stylePoints: { scandinavian: 3, minimalist: 2 }, nextQuestion: 'q5_art' }, ]
+    },
+    'q5_art': {
+        question: "Which piece of art would you hang on your wall?", type: 'image',
+        answers: [ { image: img17, stylePoints: { modern: 1, abstract: 3, minimalist: 2 }, nextQuestion: 'q6_lighting' }, { image: img18, stylePoints: { traditional: 2, classic: 2 }, nextQuestion: 'q6_lighting' }, { image: img19, stylePoints: { bohemian: 2, eclectic: 3 }, nextQuestion: 'q6_lighting' }, { image: img20, stylePoints: { coastal: 2, scandinavian: 1 }, nextQuestion: 'q6_lighting' }, ]
+    },
+    'q6_lighting': {
+        question: "How do you prefer your lighting?", type: 'text',
+        answers: [ { text: "Bright, open, and natural.", stylePoints: { scandinavian: 2, minimalist: 1 }, nextQuestion: 'q7_vibe' }, { text: "Warm, moody, and atmospheric.", stylePoints: { bohemian: 2, industrial: 1 }, nextQuestion: 'q7_vibe' }, { text: "Statement-making and dramatic.", stylePoints: { eclectic: 2, modern: 1 }, nextQuestion: 'q7_vibe' }, { text: "Classic and elegant.", stylePoints: { traditional: 2 }, nextQuestion: 'q7_vibe' }, ]
+    },
+    'q7_vibe': {
+        question: "Finally, which word best describes your ideal space?", type: 'text',
+        answers: [ { text: "Uncluttered", stylePoints: { minimalist: 3 }, nextQuestion: null }, { text: "Cozy", stylePoints: { bohemian: 3 }, nextQuestion: null }, { text: "Sophisticated", stylePoints: { modern: 3 }, nextQuestion: null }, { text: "Playful", stylePoints: { eclectic: 3 }, nextQuestion: null }, ],
+    },
 };
 
-// --- THIS IS THE MAJOR UPDATE ---
-// We now add specific, bookable design packages to each style.
+// --- THIS IS THE FIX: Every style now has a 'resultImage' property ---
 export const styles = {
     modern: { 
         name: "Modern", 
         description: "You prefer clean lines, simple color palettes, and the use of materials like metal, glass, and steel. Your space is ordered and clutter-free.",
-        packages: [
-            { id: 'MOD01', name: 'Sleek & Simple Living Room', price: 299, image: `${imageSource}modern,livingroom,white` },
-            { id: 'MOD02', name: 'Monochrome Modern Office', price: 249, image: `${imageSource}modern,office,desk,monochrome` },
-            { id: 'MOD03', name: 'Urban Loft Bedroom', price: 349, image: `${imageSource}modern,bedroom,city` },
-        ]
+        resultImage: img1,
     },
     minimalist: { 
         name: "Minimalist", 
         description: "You believe less is more. Your ideal space is ultra-clean, simple, and serene, focusing only on the essential elements.",
-        packages: [
-            { id: 'MIN01', name: 'Serene White Bedroom', price: 320, image: `${imageSource}minimalist,bedroom,white` },
-            { id: 'MIN02', name: 'The Focused Workspace', price: 199, image: `${imageSource}minimalist,desk,apple` },
-            { id: 'MIN03', name: 'Calm & Collected Living Area', price: 280, image: `${imageSource}minimalist,sofa,livingroom` },
-        ]
+        resultImage: img7,
     },
     bohemian: { 
         name: "Bohemian", 
         description: "You love a relaxed, carefree vibe. Your space is likely filled with plants, rich patterns, and items collected from travels.",
-        packages: [
-            { id: 'BOH01', name: 'Jungle Oasis Living Room', price: 350, image: `${imageSource}bohemian,livingroom,plants` },
-            { id: 'BOH02', name: 'Cozy Rattan Bedroom', price: 300, image: `${imageSource}bohemian,bedroom,rattan` },
-            { id: 'BOH03', name: 'Eclectic Reading Nook', price: 180, image: `${imageSource}bohemian,reading,cozy` },
-        ]
+        resultImage: img2,
     },
-    // Add packages for all other styles...
+    industrial: { 
+        name: "Industrial", 
+        description: "Inspired by warehouses and lofts, you appreciate raw materials like exposed brick, metal, and concrete.",
+        resultImage: img4 
+    },
+    scandinavian: { 
+        name: "Scandinavian", 
+        description: "You crave light, airy spaces that feel calm and cozy. Wood accents and soft textures are your best friends.",
+        resultImage: img6 
+    },
+    rustic: { 
+        name: "Rustic", 
+        description: "You're drawn to natural, rugged beauty, emphasizing raw wood, stone, and earthy colors.",
+        resultImage: img5 
+    },
+    traditional: { 
+        name: "Traditional", 
+        description: "You appreciate classic details, ornate furnishings, and a sense of timeless elegance.",
+        resultImage: img3 
+    },
+    eclectic: { 
+        name: "Eclectic", 
+        description: "You have a high-energy style that loves to mix and match different eras, textures, and bold colors.",
+        resultImage: img8 
+    },
+    coastal: { 
+        name: "Coastal", 
+        description: "You love light, breezy, and beach-inspired spaces that feel open and relaxed.",
+        resultImage: img20 
+    },
+    classic: {
+        name: "Classic",
+        description: "Your taste leans towards orderly, symmetrical designs that are rooted in history and tradition.",
+        resultImage: img18
+    }
 };

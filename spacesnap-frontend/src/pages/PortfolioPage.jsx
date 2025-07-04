@@ -1,18 +1,21 @@
 // src/pages/PortfolioPage.jsx
 
 import React, { useState, useEffect } from 'react';
-import MainLayout from '../components/layout/MainLayout';
+// --- FIX: THIS LINE HAS BEEN DELETED ---
+// import MainLayout from '../components/layout/MainLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { portfolioItems, portfolioCategories } from '../data/portfolioData';
+// We will need the modal component for the next step, so let's import it.
+import PortfolioModal from '../components/ui/PortfolioModal';
 
-// --- Reusable Filter Button Component (No changes needed here) ---
+// --- Reusable Filter Button Component ---
 const FilterButton = ({ category, activeCategory, setActiveCategory }) => (
     <button
         onClick={() => setActiveCategory(category)}
         className={`px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-300
             ${activeCategory === category 
                 ? 'bg-primary-teal text-white shadow-md' 
-                : 'bg-white text-gray-700 hover:bg-gray-200'
+                : 'bg-white text-gray-700 hover:bg-gray-200 border'
             }`
         }
     >
@@ -21,50 +24,29 @@ const FilterButton = ({ category, activeCategory, setActiveCategory }) => (
 );
 
 
-// --- Main Portfolio Page Component with "Load More" functionality ---
+// --- Main Portfolio Page Component ---
 const PortfolioPage = () => {
-    // --- STATE MANAGEMENT ---
     const [activeCategory, setActiveCategory] = useState('All');
-    // This state holds the full list of items that match the current filter
-    const [sourceItems, setSourceItems] = useState(portfolioItems);
-    // This state holds only the items that are currently visible on the screen
-    const [visibleItems, setVisibleItems] = useState([]);
-    // This state tracks how many items to show. Let's start with 8.
-    const ITEMS_PER_PAGE = 8;
-    const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+    const [filteredItems, setFilteredItems] = useState([]);
+    const [selectedItem, setSelectedItem] = useState(null); // State for the modal
 
-    
-    // --- USE EFFECT HOOKS ---
-    // This effect runs whenever the user clicks a filter button (changes activeCategory)
     useEffect(() => {
-        let newSourceItems;
         if (activeCategory === 'All') {
-            newSourceItems = portfolioItems;
+            setFilteredItems(portfolioItems);
         } else {
-            newSourceItems = portfolioItems.filter(item => 
-                item.style.toLowerCase() === activeCategory.toLowerCase()
-            );
+            // Your data uses 'style' as the key, so we filter by item.style
+            setFilteredItems(portfolioItems.filter(item => item.style === activeCategory.toLowerCase()));
         }
-        setSourceItems(newSourceItems);
-        // Reset the visible count and update the visible items for the new category
-        setVisibleCount(ITEMS_PER_PAGE);
-        setVisibleItems(newSourceItems.slice(0, ITEMS_PER_PAGE));
     }, [activeCategory]);
 
     
-    // --- HANDLER FUNCTION for the "Load More" button ---
-    const handleLoadMore = () => {
-        // Increase the number of items we want to show
-        const newVisibleCount = visibleCount + ITEMS_PER_PAGE;
-        setVisibleCount(newVisibleCount);
-        // Update the visible items list with the new, larger slice of data
-        setVisibleItems(sourceItems.slice(0, newVisibleCount));
-    };
-
-
     // --- RENDER LOGIC ---
+    // The <MainLayout> wrapper has been removed and replaced with a React Fragment <>
     return (
-        <MainLayout>
+        <>
+            {/* The Modal is here, ready to be displayed when an item is selected */}
+            <PortfolioModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+
             <div className="bg-white">
                 <div className="container mx-auto px-4 py-16">
 
@@ -96,10 +78,9 @@ const PortfolioPage = () => {
                     </div>
 
                     {/* --- PORTFOLIO GRID --- */}
-                    {/* We now render from 'visibleItems' instead of the full list */}
                     <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                         <AnimatePresence>
-                            {visibleItems.map(item => (
+                            {filteredItems.map(item => (
                                 <motion.div
                                     layout
                                     key={item.id}
@@ -107,6 +88,7 @@ const PortfolioPage = () => {
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     transition={{ duration: 0.4 }}
+                                    onClick={() => setSelectedItem(item)} // This will open the modal
                                     className="bg-white rounded-lg shadow-lg overflow-hidden group cursor-pointer"
                                 >
                                     <div className="relative overflow-hidden">
@@ -121,23 +103,9 @@ const PortfolioPage = () => {
                             ))}
                         </AnimatePresence>
                     </motion.div>
-                    
-                    {/* --- LOAD MORE BUTTON --- */}
-                    {/* This button will only be visible if there are more items to load */}
-                    {visibleItems.length < sourceItems.length && (
-                        <div className="text-center mt-16">
-                            <button 
-                                onClick={handleLoadMore}
-                                className="bg-neutral-dark text-white font-bold px-8 py-3 rounded-lg hover:bg-neutral-700 transition-colors"
-                            >
-                                Load More Designs
-                            </button>
-                        </div>
-                    )}
-
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 };
 

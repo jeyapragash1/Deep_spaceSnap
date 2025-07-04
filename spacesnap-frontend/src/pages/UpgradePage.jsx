@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaCreditCard, FaLock, FaRocket } from 'react-icons/fa';
 import Button from '../components/common/Button';
-import { useAuth } from '../context/AuthContext'; // We need this to update the token
+import { useAuth } from '../context/AuthContext';
 
 const UpgradePage = () => {
     const navigate = useNavigate();
-    const { updateUserToken } = useAuth(); // We'll create this new function in AuthContext
+    const { updateUserToken } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -18,26 +18,16 @@ const UpgradePage = () => {
         setIsLoading(true);
         setError('');
 
-        // In a real app, you would process the payment with Stripe here.
-        // For our mock flow, we just simulate a delay.
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate payment processing
 
         try {
-            // Get the current token from local storage to authorize the request
-            const token = localStorage.getItem('spaceSnapToken');
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-auth-token': token
-                }
-            };
-            
-            // Call our new backend endpoint
-            const res = await axios.put('http://localhost:5000/api/users/upgrade-to-premium', {}, config);
+            // No need to manually get the token. AuthContext sets it as a default header for axios.
+            const res = await axios.put('http://localhost:5000/api/users/upgrade-to-premium', {});
 
-            // IMPORTANT: Update the token in local storage and in our auth context
+            // IMPORTANT: Update the auth state with the NEW token from the backend
             updateUserToken(res.data.token);
-
+            
+            alert('Upgrade Successful! You now have Premium access.');
             // Redirect to the dashboard where they will now have premium access
             navigate('/dashboard');
 
@@ -56,7 +46,6 @@ const UpgradePage = () => {
                     <FaRocket className="text-6xl text-primary-teal mx-auto mb-4" />
                     <h1 className="text-4xl font-extrabold text-neutral-dark mb-2">Upgrade to SpaceSnap Premium</h1>
                     <p className="text-lg text-gray-600 mb-6">Unlock a world of design possibilities.</p>
-
                     <div className="bg-white shadow-lg rounded-lg p-8">
                         <div className="text-left mb-6">
                             <h2 className="text-2xl font-bold mb-3">One-Time Payment</h2>
@@ -68,12 +57,9 @@ const UpgradePage = () => {
                                 <li className="flex items-center gap-2">✓ Priority Support</li>
                             </ul>
                         </div>
-                        
-                        {/* Mock Payment Form */}
                         <form onSubmit={handlePaymentSubmit}>
                             <h3 className="font-bold text-lg mb-4 text-left">Secure Payment</h3>
                             {error && <p className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</p>}
-
                             <div className="mb-4 relative">
                                 <FaCreditCard className="absolute left-3 top-3 text-gray-400" />
                                 <input type="text" placeholder="Card Number" className="w-full pl-10 pr-3 py-2 border rounded-md" required />
@@ -82,7 +68,6 @@ const UpgradePage = () => {
                                 <input type="text" placeholder="MM / YY" className="w-full px-3 py-2 border rounded-md" required />
                                 <input type="text" placeholder="CVC" className="w-full px-3 py-2 border rounded-md" required />
                             </div>
-                            
                             <Button type="submit" className="w-full py-3 text-lg flex items-center justify-center gap-3" disabled={isLoading}>
                                 {isLoading ? <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <FaLock />}
                                 {isLoading ? 'Processing Payment...' : 'Pay ₹1000 Securely'}

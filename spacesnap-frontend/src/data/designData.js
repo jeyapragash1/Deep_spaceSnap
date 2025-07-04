@@ -1,12 +1,3 @@
-// src/data/designData.js
-
-// --- FINAL, CORRECTED LOCAL IMAGE IMPORTS ---
-// This code now imports every image from its exact location and with its correct name and extension.
-// There are NO sub-folders in the paths.
-
-
-
-
 
 import darkWoodPattern1 from "../assets/images/floors/dark wood1.jpg";
 import darkWoodPattern2 from "../assets/images/floors/dark wood2.jpg";

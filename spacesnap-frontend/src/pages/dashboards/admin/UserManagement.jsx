@@ -18,15 +18,17 @@ const UserManagement = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const debouncedSearchTerm = useDebounce(searchTerm, 500); // Wait 500ms after user stops typing
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
     const fetchUsers = useCallback(async () => {
         try {
             setLoading(true);
+            // --- THE FIX: Axios will now automatically use the default auth token
+            // set by AuthContext. No need for a manual config object here.
             const res = await axios.get(`http://localhost:5000/api/users?search=${debouncedSearchTerm}`);
             setUsers(res.data);
         } catch (err) {
-            setError('Failed to fetch users.');
+            setError('Failed to fetch users. Ensure you are logged in as an admin.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -40,9 +42,9 @@ const UserManagement = () => {
     const handleDelete = async (userId) => {
         if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
             try {
+                // Axios will also use the default token for this request
                 await axios.delete(`http://localhost:5000/api/users/${userId}`);
-                // Refresh the user list after deletion
-                fetchUsers();
+                fetchUsers(); // Re-fetch the list to show the change
             } catch (err) {
                 alert('Failed to delete user.');
                 console.error(err);
@@ -60,12 +62,9 @@ const UserManagement = () => {
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-md">
-                {/* Search and Filter Bar */}
                 <div className="mb-4">
                     <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <FaSearch className="text-gray-400" />
-                        </span>
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3"><FaSearch className="text-gray-400" /></span>
                         <input
                             type="text"
                             placeholder="Search by name or email..."
@@ -75,8 +74,6 @@ const UserManagement = () => {
                         />
                     </div>
                 </div>
-
-                {/* Users Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
@@ -97,7 +94,7 @@ const UserManagement = () => {
                                     <tr key={user._id} className="border-b hover:bg-gray-50">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <img src={`https://source.unsplash.com/150x150/?portrait,person,${user._id}`} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
+                                                <img src={user.avatar || `https://source.unsplash.com/150x150/?portrait,person,${user._id}`} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
                                                 <div>
                                                     <p className="font-medium">{user.name}</p>
                                                     <p className="text-sm text-gray-500">{user.email}</p>

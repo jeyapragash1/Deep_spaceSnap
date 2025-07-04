@@ -8,7 +8,7 @@ dotenv.config();
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const designerRoutes = require('./routes/designerRoutes');
-// You can add other route files here later (e.g., adminRoutes)
+const designRoutes = require('./routes/designRoutes'); // <-- IMPORT THE NEW ROUTES
 
 const startServer = async () => {
   await connectDB();
@@ -17,14 +17,12 @@ const startServer = async () => {
   app.use(cors());
   app.use(express.json());
 
-  // --- API Routes ---
   app.get('/', (req, res) => res.send('API is running...'));
   
-  // This line tells the server that any request to '/api/users'
-  // should be handled by the 'userRoutes.js' file. This is crucial.
+  // Use all the route files
   app.use('/api/users', userRoutes);
-  
   app.use('/api/designers', designerRoutes);
+  app.use('/api/designs', designRoutes); // <-- TELL THE APP TO USE THE ROUTES
 
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => console.log(`🚀 Server is listening on port ${PORT}`));

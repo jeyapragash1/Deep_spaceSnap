@@ -1,12 +1,11 @@
+// src/pages/LandingPage.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import MainLayout from '../components/layout/MainLayout';
 import Card from '../components/ui/Card';
 import { FaArrowRight, FaPaintRoller, FaCube, FaPuzzlePiece } from 'react-icons/fa';
 
-// --- LOCAL ASSET IMPORTS ---
-import heroVideo from '../assets/videos/hero-video.mp4.mp4';
+// --- LOCAL IMAGE IMPORTS (These are correct) ---
 import img1 from '../assets/images/1.jpg';
 import img2 from '../assets/images/2.jpg';
 import img3 from '../assets/images/3.jpg';
@@ -20,6 +19,8 @@ import img10 from '../assets/images/10.jpg';
 import img11 from '../assets/images/11.jpg';
 import img12 from '../assets/images/12.jpg';
 
+// --- The 'import heroVideo' line has been completely REMOVED. ---
+
 const ScrollParallax = ({ children, offset = ['0%', '20%'], className = '' }) => {
   const ref = React.useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
@@ -29,7 +30,18 @@ const ScrollParallax = ({ children, offset = ['0%', '20%'], className = '' }) =>
 
 const HeroSection = () => (
   <section className="relative h-[calc(100vh-64px)] flex items-center justify-center text-center overflow-hidden">
-    <video src={heroVideo} autoPlay loop muted playsInline className="absolute top-0 left-0 w-full h-full object-cover z-0" />
+    
+    {/* --- THIS IS THE FIX --- */}
+    {/* The 'src' attribute now points directly to the public path: "/hero-video.mp4". */}
+    <video 
+      src="/hero-video.mp4" 
+      autoPlay 
+      loop 
+      muted 
+      playsInline 
+      className="absolute top-0 left-0 w-full h-full object-cover z-0" 
+    />
+    
     <div className="absolute inset-0 bg-black bg-opacity-40 z-10"></div>
     <div className="relative z-20 text-white p-4">
       <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }} className="text-5xl md:text-7xl font-extrabold mb-4">
@@ -39,7 +51,7 @@ const HeroSection = () => (
         Visualize, Plan, and Transform Your Home with AI & AR.
       </motion.p>
       <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.6, duration: 0.5 }}>
-        <Link to="/login" className="bg-accent-gold text-white px-8 py-4 text-lg rounded-lg font-semibold shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform">
+        <Link to="/register" className="bg-accent-gold text-white px-8 py-4 text-lg rounded-lg font-semibold shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform">
           Get Started For Free
         </Link>
       </motion.div>
@@ -154,7 +166,7 @@ const FinalInfoSection = () => (
 
 const LandingPage = () => {
   return (
-    <MainLayout>
+    <>
       <HeroSection />
       <FeaturesOverviewSection />
       <FeaturePromo image={img1} title="Find Your Perfect Style" description="Not sure where to start? Our interactive Style Quiz analyzes your preferences to uncover your unique design personality, from Modern Minimalist to Bohemian Chic." link="/style-quiz" linkText="Take the Style Quiz" />
@@ -162,7 +174,7 @@ const LandingPage = () => {
       <FeaturePromo image={img3} title="See It In Your Room with AR" description="Use your phone's camera to place true-to-scale 3D models of furniture right in your space. No more guessing if that sofa will fit!" link="/ar-preview" linkText="Experience AR Preview" />
       <PortfolioSection />
       <FinalInfoSection />
-    </MainLayout>
+    </>
   );
 };
 
