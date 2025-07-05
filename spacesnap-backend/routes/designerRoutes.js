@@ -1,88 +1,79 @@
-// spacesnap-backend/routes/designerRoutes.js
+// routes/designRoutes.js
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
 const auth = require('../middleware/authMiddleware');
+const Design = require('../models/Design');
+const User = require('../models/User');
 
-// A helper middleware to check if the logged-in user is an admin
-const adminOnly = async (req, res, next) => {
-    try {
-        const user = await User.findById(req.user.id);
-        if (user.role !== 'admin') {
-            return res.status(403).json({ msg: 'Access denied: Admins only' });
-        }
-        next();
-    } catch (err) {
-        res.status(500).send('Server Error');
+// A helper middleware to check if the user is a designer or admin
+const designerOrAdmin = async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+    if (user.role !== 'designer' && user.role !== 'admin') {
+        return res.status(403).json({ msg: 'Access denied: Designers or Admins only' });
     }
+    next();
 };
 
-// @route   GET api/designers
-// @desc    Get a list of all APPROVED designers (for the consultation form)
-// @access  Public
-router.get('/', async (req, res) => {
+// @route   POST api/designs
+// @desc    Create a new design template (for designers)
+// @access  Private (Designer or Admin)
+router.post('/', auth, designerOrAdmin, async (req, res) => {
+    const { name, description, style, price, thumbnail } = req.body;
+
     try {
-        const designers = await User.find({ role: 'designer' }).select('name');
-        res.json(designers);
+        const newDesign = new Design({
+            user: req.user.id, // The designer creating the template
+            name,
+            // For a real app, 'designData' would be a complex JSON object.
+            // For a template, we can store metadata.
+            designData: JSON.stringify({ description, style, price }),
+            // The frontend will send a thumbnail URL.
+            thumbnail: thumbnail || 'https://source.unsplash.com/random/400x300?interior,design',
+        });
+
+        const savedDesign = await newDesign.save();
+        res.status(201).json(savedDesign);
+
     } catch (err) {
-        console.error(err.message);
+        console.error('Error saving design template:', err.message);
         res.status(500).send('Server Error');
     }
 });
 
-// @route   GET api/designers/pending
-// @desc    Get all users who are pending designer approval
-// @access  Admin
-router.get('/pending', auth, adminOnly, async (req, res) => {
+
+// @route   GET api/designs/my-designs
+// @desc    Get all designs for the logged-in designer
+// @access  Private (Designer)
+router.get('/my-designs', auth, async (req, res) => {
     try {
-        // We will find users with the 'registered' role as a proxy for pending designers.
-        // In a real app, you might add a field like 'applicationStatus: "pending"'
-        const pendingDesigners = await User.find({ role: 'registered' }).select('-password');
-        res.json(pendingDesigners);
+        const designs = await Design.find({ user: req.user.id }).sort({ createdAt: -1 });
+        res.json(designs);
     } catch (err) {
-        console.error(err.message);
+        console.error('Error fetching designs:', err.message);
         res.status(500).send('Server Error');
     }
 });
 
-// @route   PUT api/designers/approve/:id
-// @desc    Approve a pending designer by changing their role
-// @access  Admin
-router.put('/approve/:id', auth, adminOnly, async (req, res) => {
+// @route   DELETE api/designs/:id
+// @desc    Delete a design
+// @access  Private (Designer or Admin)
+router.delete('/:id', auth, designerOrAdmin, async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            { role: 'designer' },
-            { new: true }
-        ).select('-password');
+        const design = await Design.findById(req.params.id);
+        if (!design) return res.status(404).json({ msg: 'Design not found' });
 
-        if (!user) {
-            return res.status(404).json({ msg: 'User not found' });
+        // Ensure the user owns the design before deleting
+        if (design.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'User not authorized' });
         }
-        res.json({ msg: 'Designer approved successfully', user });
+
+        await design.deleteOne();
+        res.json({ msg: 'Design removed' });
     } catch (err) {
-        console.error(err.message);
+        console.error('Error deleting design:', err.message);
         res.status(500).send('Server Error');
     }
 });
 
-// @route   PUT api/designers/reject/:id
-// @desc    Reject a designer application
-// @access  Admin
-router.put('/reject/:id', auth, adminOnly, async (req, res) => {
-    try {
-        // For simplicity, we'll just delete the user.
-        // In a real app, you might change their status to 'rejected'.
-        const user = await User.findById(req.params.id);
-        if (!user) {
-            return res.status(404).json({ msg: 'User not found' });
-        }
-        await user.deleteOne();
-        res.json({ msg: 'Designer application rejected and removed' });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
-    }
-});
 
 module.exports = router;

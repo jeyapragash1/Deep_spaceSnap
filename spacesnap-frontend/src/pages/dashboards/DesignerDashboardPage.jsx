@@ -1,67 +1,136 @@
 // src/pages/dashboards/DesignerDashboardPage.jsx
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
-import { FaDollarSign, FaFileInvoice, FaRegThumbsUp } from 'react-icons/fa';
-
-// --- THIS IS THE FIX: The path now correctly points to the component ---
+import { FaDollarSign, FaComments, FaCheck, FaTimes, FaHourglassHalf } from 'react-icons/fa';
+import axios from 'axios';
 import DesignerStatCard from '../../components/dashboard/DesignerStatCard';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-// --- DUMMY DATA (to match your image) ---
+// --- Dummy Data for Chart (as real sales data isn't tracked yet) ---
 const salesAnalyticsData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [{
-        label: 'Sales',
-        data: [28, 40, 36, 52, 48, 60, 54, 68, 62],
-        borderColor: '#FF9800',
-        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+        label: 'Earnings',
+        data: [150, 250, 180, 300, 280, 400],
+        borderColor: '#0D9488', // primary-teal
+        backgroundColor: 'rgba(13, 148, 136, 0.1)',
         fill: true,
         tension: 0.4,
     }]
 };
 
-const bestSellers = [
-    { name: 'Modern Living Room Package', sales: 260 },
-    { name: 'Bohemian Bedroom Concept', sales: 1474 },
-    { name: 'Minimalist Office Design', sales: 8784 },
-];
-
-const recentTransactions = [
-    { name: 'Andrea Witler', method: 'Apple Pay', status: 'Success', amount: 1099.00 },
-    { name: 'Timothy Sands', method: 'Stripe', status: 'Pending', amount: 200.10 },
-    { name: 'Bonnie Rodrigues', method: 'PayU', status: 'Success', amount: 1569.00 },
-];
 
 const DesignerDashboardPage = () => {
+    // --- STATE MANAGEMENT ---
+    const [consultations, setConsultations] = useState([]);
+    const [stats, setStats] = useState({ pending: 0, completed: 0, total: 0 });
+    const [loading, setLoading] = useState(true);
+
+    // --- DATA FETCHING ---
+    useEffect(() => {
+        const fetchDesignerData = async () => {
+            try {
+                // The auth token is automatically sent by the AuthContext interceptor
+                const res = await axios.get('http://localhost:5000/api/consultations/designer');
+                const fetchedConsultations = res.data;
+                setConsultations(fetchedConsultations);
+                
+                // Calculate stats based on the fetched data
+                const pendingCount = fetchedConsultations.filter(c => c.status === 'Pending').length;
+                const completedCount = fetchedConsultations.filter(c => c.status === 'Completed').length;
+                setStats({
+                    pending: pendingCount,
+                    completed: completedCount,
+                    total: fetchedConsultations.length,
+                });
+
+            } catch (err) {
+                console.error("Failed to fetch designer data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDesignerData();
+    }, []);
+    
+    // --- ACTION HANDLERS ---
+    const handleUpdateStatus = (id, status) => {
+        // In a real app, you would make a PUT request to the backend here.
+        // For now, we just simulate the update on the frontend for a good UX.
+        alert(`Request ${id} has been marked as ${status}.`);
+        setConsultations(consultations.map(c => c._id === id ? { ...c, status: status } : c));
+    };
+
+    if (loading) {
+        return <div className="text-center p-10">Loading Designer Dashboard...</div>;
+    }
+
     return (
         <div>
+            {/* --- STATS CARDS (Now with real data) --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                <DesignerStatCard title="Weekly Earning" value="$95,000.45" change="+48%" icon={<div className="w-12 h-12 rounded-full bg-green-200 flex items-center justify-center"><FaDollarSign className="text-green-600" /></div>} />
-                <DesignerStatCard title="10,000+" value="Total Sales" color="bg-orange-400 text-white" />
-                <DesignerStatCard title="800+" value="Purchased Goods" color="bg-blue-900 text-white" />
+                <DesignerStatCard title="Total Consultations" value={stats.total} icon={<div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center"><FaComments className="text-blue-500" /></div>} />
+                <DesignerStatCard title="Pending Requests" value={stats.pending} icon={<div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center"><FaHourglassHalf className="text-yellow-500" /></div>} />
+                <DesignerStatCard title="Completed Jobs" value={stats.completed} icon={<div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center"><FaCheck className="text-green-500" /></div>} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="font-semibold text-lg mb-4">Best Seller</h3>
-                    <ul className="space-y-4">
-                        {bestSellers.map(p => <li key={p.name} className="flex items-center justify-between"><p className="font-medium">{p.name}</p><span className="text-sm text-gray-500">{p.sales}</span></li>)}
-                    </ul>
-                </div>
-                <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="font-semibold text-lg mb-4">Recent Transactions</h3>
-                    <table className="w-full">
+            {/* --- CONSULTATION MANAGEMENT TABLE --- */}
+            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h3 className="font-semibold text-lg mb-4">Consultation Requests</h3>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-gray-50 border-b">
+                                <th className="p-4 font-semibold">Client</th>
+                                <th className="p-4 font-semibold">Subject</th>
+                                <th className="p-4 font-semibold">Status</th>
+                                <th className="p-4 font-semibold text-center">Actions</th>
+                            </tr>
+                        </thead>
                         <tbody>
-                           {recentTransactions.map(t=><tr key={t.name} className="border-b"><td className="py-2">{t.name}</td><td>{t.method}</td><td><span className={`text-xs px-2 py-1 rounded-full ${t.status==='Success'?'bg-green-100 text-green-800':'bg-yellow-100 text-yellow-800'}`}>{t.status}</span></td><td className="text-right font-semibold">${t.amount.toFixed(2)}</td></tr>)}
+                            {consultations.length > 0 ? (
+                                consultations.map(consultation => (
+                                    <tr key={consultation._id} className="border-b hover:bg-gray-50">
+                                        <td className="p-4">
+                                            <p className="font-medium">{consultation.user.name}</p>
+                                            <p className="text-xs text-gray-500">{consultation.user.email}</p>
+                                        </td>
+                                        <td className="p-4 text-gray-600">{consultation.subject}</td>
+                                        <td className="p-4">
+                                            <span className={`text-xs font-semibold px-2 py-1 rounded-full capitalize ${
+                                                consultation.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                consultation.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }`}>
+                                                {consultation.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-center space-x-2">
+                                            <button onClick={() => alert(consultation.message)} className="text-blue-600 hover:underline text-xs">View Message</button>
+                                            {consultation.status === 'Pending' && (
+                                                <>
+                                                    <button onClick={() => handleUpdateStatus(consultation._id, 'Accepted')} className="text-green-600 hover:underline text-xs">Accept</button>
+                                                    <button onClick={() => handleUpdateStatus(consultation._id, 'Cancelled')} className="text-red-600 hover:underline text-xs">Decline</button>
+                                                </>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr><td colSpan="4" className="text-center p-8 text-gray-500">You have no consultation requests at this time.</td></tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
+            {/* --- EARNINGS ANALYTICS (Using dummy data for now) --- */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="font-semibold text-lg mb-4">Sales Analytics</h3>
+                <h3 className="font-semibold text-lg mb-4">Earnings Analytics</h3>
                 <div className="h-64"><Line data={salesAnalyticsData} options={{ maintainAspectRatio: false }} /></div>
             </div>
         </div>
