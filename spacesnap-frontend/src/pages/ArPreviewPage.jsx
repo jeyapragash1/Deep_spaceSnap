@@ -3,20 +3,23 @@
 import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { ARButton, XR, Controllers, Hands, useHitTest } from '@react-three/xr';
-import { useGLTF, OrbitControls } from '@react-three/drei'; // We no longer need Environment
-import MainLayout from '../components/layout/MainLayout';
+import { useGLTF, OrbitControls } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { FaMobileAlt, FaCube, FaQrcode, FaHandPointer } from 'react-icons/fa';
 import { QRCodeCanvas } from 'qrcode.react';
 import * as THREE from 'three';
 
-// --- 3D MODEL COMPONENT (No changes needed) ---
+// --- FIX: THIS LINE HAS BEEN DELETED ---
+// import MainLayout from '../components/layout/MainLayout';
+
+
+// --- 3D MODEL COMPONENT ---
 function SofaModel(props) {
   const { scene } = useGLTF('/models/sofa.glb'); 
   return <primitive object={scene} {...props} />;
 }
 
-// --- AR HIT-TEST MARKER (No changes needed) ---
+// --- AR HIT-TEST MARKER ---
 function HitTestMarker({ onHit }) {
     const hitTestRef = useRef(null);
     useHitTest((hitMatrix) => {
@@ -54,7 +57,6 @@ function ArExperience() {
           <Controllers /> <Hands />
           <Suspense fallback={null}>
             {placedObjects.map(obj => (<SofaModel key={obj.id} scale={obj.scale} position={obj.position} />))}
-            {/* --- THIS IS THE FIX: The <Environment> component has been REMOVED --- */}
           </Suspense>
         </XR>
       </Canvas>
@@ -72,7 +74,6 @@ function DesktopPreview() {
                 <SofaModel />
             </Suspense>
             <OrbitControls autoRotate />
-            {/* --- THIS IS THE FIX: The <Environment> component has been REMOVED --- */}
         </Canvas>
     )
 }
@@ -87,8 +88,10 @@ const ArPreviewPage = () => {
         setIsMobile(mobileRegex.test(userAgent));
     }, []);
 
+    // --- FIX: The <MainLayout> wrapper has been removed ---
+    // The component now returns its content directly, wrapped in a React Fragment <>
     return (
-        <MainLayout>
+        <>
             <div className="bg-white">
                 <div className="container mx-auto px-4 py-16">
                     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-12">
@@ -134,7 +137,7 @@ const ArPreviewPage = () => {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 };
 
