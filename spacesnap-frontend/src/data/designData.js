@@ -1,4 +1,3 @@
-
 import darkWoodPattern1 from "../assets/images/floors/dark wood1.jpg";
 import darkWoodPattern2 from "../assets/images/floors/dark wood2.jpg";
 import darkWoodPattern3 from "../assets/images/floors/dark wood3.jpg";
@@ -23,7 +22,7 @@ import lightWoodPattern10 from "../assets/images/floors/light wood10.jpg";
 import lightWoodPattern11 from "../assets/images/floors/light wood11.jpg";
 import lightWoodPattern12 from "../assets/images/floors/light wood12.jpg";
 import lightWoodPattern13 from "../assets/images/floors/light wood13.jpg";
-import marbleTilePattern10 from "../assets/images/floors/marble tile10.jpg"; 
+import marbleTilePattern10 from "../assets/images/floors/marble tile10.jpg";
 import marbleTilePattern1 from "../assets/images/floors/marble tile1.png";
 import marbleTilePattern2 from "../assets/images/floors/marble tile2.jpg";
 import marbleTilePattern3 from "../assets/images/floors/marble tile3.jpg";
@@ -33,12 +32,12 @@ import marbleTilePattern6 from "../assets/images/floors/marble tile6.png";
 import marbleTilePattern7 from "../assets/images/floors/marble tile7.png";
 import marbleTilePattern8 from "../assets/images/floors/marble tile8.png";
 import marbleTilePattern9 from "../assets/images/floors/marble tile9.png";
-import ceilingFanImg1 from "../assets/images/objects/ceiling objects/ceiling fan1.png"; 
-import ceilingFanImg2 from "../assets/images/objects/ceiling objects/ceiling fan2.png"; 
-import ceilingFanImg3 from "../assets/images/objects/ceiling objects/ceiling fan3.png"; 
-import ceilingFanImg4 from "../assets/images/objects/ceiling objects/ceiling fan4.png"; 
-import ceilingFanImg5 from "../assets/images/objects/ceiling objects/ceiling fan5.png"; 
-import ceilingFanImg6 from "../assets/images/objects/ceiling objects/ceiling fan6.png"; 
+import ceilingFanImg1 from "../assets/images/objects/ceiling objects/ceiling fan1.png";
+import ceilingFanImg2 from "../assets/images/objects/ceiling objects/ceiling fan2.png";
+import ceilingFanImg3 from "../assets/images/objects/ceiling objects/ceiling fan3.png";
+import ceilingFanImg4 from "../assets/images/objects/ceiling objects/ceiling fan4.png";
+import ceilingFanImg5 from "../assets/images/objects/ceiling objects/ceiling fan5.png";
+import ceilingFanImg6 from "../assets/images/objects/ceiling objects/ceiling fan6.png";
 import pendantLightImg1 from "../assets/images/objects/ceiling objects/pendant light1.png";
 import pendantLightImg2 from "../assets/images/objects/ceiling objects/pendant light2.png";
 import pendantLightImg3 from "../assets/images/objects/ceiling objects/pendant light3.png";
@@ -67,27 +66,31 @@ import wallClockImg3 from "../assets/images/objects/wall objects/clock3.png";
 import wallClockImg4 from "../assets/images/objects/wall objects/clock4.png";
 import wallClockImg5 from "../assets/images/objects/wall objects/clock5.png";
 import wallClockImg6 from "../assets/images/objects/wall objects/clock6.png";
-import frameImg1 from "../assets/images/objects/wall objects/frame1.png"; 
-import frameImg2 from "../assets/images/objects/wall objects/frame2.png"; 
-import frameImg3 from "../assets/images/objects/wall objects/frame3.png"; 
-import frameImg4 from "../assets/images/objects/wall objects/frame4.png"; 
-import frameImg5 from "../assets/images/objects/wall objects/frame5.png"; 
-import frameImg6 from "../assets/images/objects/wall objects/frame6.png"; 
-import frameImg7 from "../assets/images/objects/wall objects/frame7.png"; 
-import frameImg8 from "../assets/images/objects/wall objects/frame8.png"; 
+import frameImg1 from "../assets/images/objects/wall objects/frame1.png";
+import frameImg2 from "../assets/images/objects/wall objects/frame2.png";
+import frameImg3 from "../assets/images/objects/wall objects/frame3.png";
+import frameImg4 from "../assets/images/objects/wall objects/frame4.png";
+import frameImg5 from "../assets/images/objects/wall objects/frame5.png";
+import frameImg6 from "../assets/images/objects/wall objects/frame6.png";
+import frameImg7 from "../assets/images/objects/wall objects/frame7.png";
+import frameImg8 from "../assets/images/objects/wall objects/frame8.png";
 
 // --- WALLS ---
 export const wallColorPalettes = {
-    modern: ['#FFFFFF', '#2F3B4E', '#8D93A1', '#EAEAEA'],
-    minimalist: ['#F5F5F5', '#DDDDDD', '#333333', '#A9A9A9'],
-    bohemian: ['#DCC9B6', '#6B7A6A', '#C87D5A', '#F2E4D5'],
-    industrial: ['#424242', '#BDBDBD', '#757575', '#CF5C36'],
-    default: ['#FFFFFF', '#F0F0F0', '#CCCCCC', '#AAAAAA'],
+  modern: [" #006d77", " #454955", " #284b63", " #3d5a80"],
+  minimalist: [" #e0afa0", " #d5bdaf", " #eee4e1", " #e5d1d0"],
+  bohemian: [" #A3573A", "	#df9152", "	#d88780", " #8b6d6c"],
+  industrial: [" #3b5763", "	#8297a6", " #c8cfc1", " #5e4046"],
+  default: [" #660f56", "	#d7a3b7", " #87986a", " #FFFFFF"],
 };
 
 // --- CEILINGS ---
 export const ceilingColorPalettes = {
-    default: ['#FFFFFF', '#F5F5F5', '#E8E8E8', '#DCDCDC'],
+  modern: [" #006d77", " #454955", " #284b63", " #3d5a80"],
+  minimalist: [" #e0afa0", " #d5bdaf", " #eee4e1", " #e5d1d0"],
+  bohemian: [" #A3573A", "	#df9152", "	#d88780", " #8b6d6c"],
+  industrial: [" #3b5763", "	#8297a6", " #c8cfc1", " #5e4046"],
+  default: [" #660f56", "	#d7a3b7", " #87986a", " #FFFFFF"],
 };
 
 // --- FLOORS (Now using the correct imported images) ---
@@ -132,8 +135,6 @@ export const floorPatterns = [
 // --- PLACEABLE OBJECTS (Now using the correct imported images) ---
 export const placeableObjects = {
   wall: [
-    
-    
     {
       id: "obj_wall_03",
       name: "Modern Wall Clock1",
@@ -234,8 +235,6 @@ export const placeableObjects = {
     },
   ],
   floor: [
-    
-  
     {
       id: "obj_floor_03",
       name: "House Plant1",
@@ -343,8 +342,6 @@ export const placeableObjects = {
     },
   ],
   ceiling: [
-    
-    
     {
       id: "obj_ceil_03",
       name: "Ceiling Fan1",
