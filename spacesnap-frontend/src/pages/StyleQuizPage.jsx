@@ -74,8 +74,21 @@ const StyleQuizPage = () => {
                             <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {currentQuestion.answers.map((answer, index) => (
                                     <motion.button key={`${currentQuestionId}-${index}`} onClick={() => handleAnswerClick(answer)} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: index * 0.1 }} className="group relative rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                                        <img src={answer.image} alt={`Style option ${index + 1}`} className="w-full h-64 object-cover" />
-                                        <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-10 transition-all duration-300"></div>
+                                        {answer.image && !answer.nameOnly ? (
+                                            <>
+                                                <img src={answer.image} alt={`Style option ${index + 1}`} className="w-full h-64 object-cover" />
+                                                <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-10 transition-all duration-300"></div>
+                                                {answer.text && (
+                                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                                                        <p className="text-white font-semibold text-lg">{answer.text}</p>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <div className="w-full h-64 bg-gradient-to-br from-primary-teal/20 to-accent-gold/20 flex items-center justify-center">
+                                                <p className="text-2xl font-bold text-neutral-dark">{answer.text || `Option ${index + 1}`}</p>
+                                            </div>
+                                        )}
                                     </motion.button>
                                 ))}
                             </motion.div>
