@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { getLocalImageForAnswer } from '../utils/localImageMappings';
 
 const API_URL = 'http://localhost:5000/api/quiz';
 
@@ -25,72 +24,6 @@ api.interceptors.request.use(
   }
 );
 
-// Default questions with local images for fallback
-const getDefaultQuestionsWithLocalImages = () => {
-  return [
-    {
-      id: 'q1',
-      question: 'Which room style appeals to you most?',
-      type: 'image',
-      questionType: 'style_preference',
-      answers: [
-        { id: 'modern', text: 'Modern', image: '/quiz/room-modern.svg', value: 'modern' },
-        { id: 'bohemian', text: 'Bohemian', image: '/quiz/room-bohemian.svg', value: 'bohemian' },
-        { id: 'traditional', text: 'Traditional', image: '/quiz/room-traditional.svg', value: 'traditional' },
-        { id: 'scandinavian', text: 'Scandinavian', image: '/quiz/room-scandinavian.svg', value: 'scandinavian' }
-      ]
-    },
-    {
-      id: 'q2',
-      question: 'What color palette do you prefer?',
-      type: 'image',
-      questionType: 'color_palette',
-      answers: [
-        { id: 'neutral', text: 'Neutral', image: '/quiz/palette-neutral.svg', value: 'neutral' },
-        { id: 'warm', text: 'Warm', image: '/quiz/palette-warm.svg', value: 'warm' },
-        { id: 'cool', text: 'Cool', image: '/quiz/palette-cool.svg', value: 'cool' },
-        { id: 'vibrant', text: 'Vibrant', image: '/quiz/palette-vibrant.svg', value: 'vibrant' }
-      ]
-    },
-    {
-      id: 'q3',
-      question: 'What texture do you prefer?',
-      type: 'image',
-      questionType: 'texture_preference',
-      answers: [
-        { id: 'smooth', text: 'Smooth & Sleek', image: '/quiz/texture-smooth.svg', value: 'smooth' },
-        { id: 'natural', text: 'Natural & Organic', image: '/quiz/texture-natural.svg', value: 'natural' },
-        { id: 'mixed', text: 'Mixed Textures', image: '/quiz/texture-mixed.svg', value: 'mixed' },
-        { id: 'luxurious', text: 'Luxurious & Plush', image: '/quiz/texture-luxurious.svg', value: 'luxurious' }
-      ]
-    },
-    {
-      id: 'q4',
-      question: 'What art style do you prefer?',
-      type: 'image',
-      questionType: 'art_preference',
-      answers: [
-        { id: 'nature', text: 'Nature & Landscapes', image: '/quiz/art-nature.svg', value: 'nature' },
-        { id: 'abstract', text: 'Abstract & Modern', image: '/quiz/art-abstract.svg', value: 'abstract' },
-        { id: 'classical', text: 'Classical & Traditional', image: '/quiz/art-classical.svg', value: 'classical' },
-        { id: 'eclectic', text: 'Eclectic & Mixed', image: '/quiz/art-eclectic.svg', value: 'eclectic' }
-      ]
-    },
-    {
-      id: 'q5',
-      question: 'What furniture style do you prefer?',
-      type: 'image',
-      questionType: 'furniture_preference',
-      answers: [
-        { id: 'modern', text: 'Modern & Minimal', image: '/quiz/furniture-modern.svg', value: 'modern' },
-        { id: 'vintage', text: 'Vintage & Antique', image: '/quiz/furniture-vintage.svg', value: 'vintage' },
-        { id: 'classic', text: 'Classic & Traditional', image: '/quiz/furniture-classic.svg', value: 'classic' },
-        { id: 'scandinavian', text: 'Scandinavian & Simple', image: '/quiz/furniture-scandinavian.svg', value: 'scandinavian' }
-      ]
-    }
-  ];
-};
-
 const quizService = {
   // Get all quiz questions
   getQuestions: async () => {
@@ -98,41 +31,13 @@ const quizService = {
       const response = await api.get('/questions');
       const data = response.data;
       
-      // Apply fallback logic for images
+      // Convert relative image URLs to absolute URLs
       if (data.questions) {
         data.questions.forEach(question => {
-          if (question.answers && question.type === 'image') {
+          if (question.answers) {
             question.answers.forEach(answer => {
-              // First priority: DB image
-              if (answer.image) {
-                if (answer.image.startsWith('/api/images/')) {
-                  answer.image = `http://localhost:5000${answer.image}`;
-                }
-                // Check if image exists by trying to load it
-                const img = new Image();
-                img.onerror = () => {
-                  // If DB image fails, try local image
-                  const localImage = getLocalImageForAnswer(question.questionType || question.id, answer.id || answer.value);
-                  if (localImage) {
-                    answer.image = localImage;
-                    answer.fallbackToLocal = true;
-                  } else {
-                    // If no local image, mark for name-only display
-                    answer.image = null;
-                    answer.nameOnly = true;
-                  }
-                };
-                img.src = answer.image;
-              } else {
-                // No DB image, try local fallback
-                const localImage = getLocalImageForAnswer(question.questionType || question.id, answer.id || answer.value);
-                if (localImage) {
-                  answer.image = localImage;
-                  answer.fallbackToLocal = true;
-                } else {
-                  // No images available, mark for name-only display
-                  answer.nameOnly = true;
-                }
+              if (answer.image && answer.image.startsWith('/api/images/')) {
+                answer.image = `http://localhost:5000${answer.image}`;
               }
             });
           }
@@ -142,10 +47,7 @@ const quizService = {
       return data;
     } catch (error) {
       console.error('Error fetching quiz questions:', error);
-      // If API fails, return questions with local images only
-      return {
-        questions: getDefaultQuestionsWithLocalImages()
-      };
+      throw error;
     }
   },
 

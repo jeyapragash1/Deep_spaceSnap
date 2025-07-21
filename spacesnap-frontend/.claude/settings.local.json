@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(node:*)",
+      "Bash(mv:*)",
+      "Bash(npm start)",
+      "Bash(curl:*)",
+      "Bash(del create-placeholders.cjs)",
+      "Bash(rm:*)",
+      "Bash(npm install:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(taskkill:*)",
+      "Bash(timeout 10 npm start)",
+      "Bash(cmd.exe:*)",
+      "Bash(start /min cmd /c \"npm start\")",
+      "Bash(timeout:*)",
+      "Bash(start cmd /k \"npm start\")"
+    ],
+    "deny": []
+  }
+}
