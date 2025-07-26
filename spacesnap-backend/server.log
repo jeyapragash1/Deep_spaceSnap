@@ -1,0 +1,8 @@
+
+> spacesnap-backend@1.0.0 start
+> node server.js
+
+(node:4880) [MONGOOSE] Warning: Duplicate schema index on {"name":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✅ MongoDB Connected Successfully: ac-kicjuze-shard-00-02.ggnplks.mongodb.net
+🚀 Server is listening on port 5000
