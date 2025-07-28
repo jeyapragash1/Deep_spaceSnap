@@ -48,7 +48,13 @@ router.post('/users', async (req, res) => {
     try {
         let user = await User.findOne({ email });
         if (user) return res.status(400).json({ msg: 'User already exists' });
-        user = new User({ name, email, password, role, isVerified: true });
+        user = new User({
+          name,
+          email,
+          password,
+          role,
+          isEmailVerified: true,
+        });
         await user.save();
         res.status(201).json(user);
     } catch (err) {

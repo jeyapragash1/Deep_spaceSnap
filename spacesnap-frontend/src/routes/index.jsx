@@ -25,6 +25,7 @@ import OtpVerificationPage from '../pages/OtpVerificationPage';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
+import EmailVerificationPage from '../pages/EmailVerificationPage';
 
 // Protected Feature Pages
 import StyleQuizPage from '../pages/StyleQuizPage'; 
@@ -85,9 +86,10 @@ const AppRoutes = () => {
             {/* === AUTH ROUTES === */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/verify-otp/:userId" element={<OtpVerificationPage />} />
+            <Route path="/verify-otp/:userId" element={<OtpVerificationPage />} />            
+            <Route path="/verify-email" element={<EmailVerificationPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password/:resettoken" element={<ResetPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
             {/* === PROTECTED ROUTES GROUP === */}
