@@ -4,15 +4,15 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 
-// --- LOAD .ENV VARIABLES (Robust Method) ---
+// Load .env variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// --- LOAD ALL MODELS ---
+// Load all necessary models
 const User = require('../models/User');
 const Design = require('../models/Design');
 const Consultation = require('../models/Consultation');
 
-// --- DATABASE CONNECTION ---
+// Database connection
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URI);
@@ -23,51 +23,48 @@ const connectDB = async () => {
     }
 };
 
-// --- THE COMPLETE SAMPLE DATA SET ---
+// --- This function creates all your specific, detailed sample data ---
 const createSampleData = () => {
-    console.log('Preparing rich sample data...');
+    console.log('Preparing detailed sample data for all dashboards...');
 
-    // We will create users with a simple password: "password123"
-    const password = 'password123';
+    const password = 'password1'; // The password for all users
+    const now = new Date();
 
-    // --- USERS ---
     const users = [
-        { _id: new mongoose.Types.ObjectId(), name: 'Admin User', email: 'admin@spacesnap.com', password: password, role: 'admin', isVerified: true },
-        { _id: new mongoose.Types.ObjectId(), name: 'Anya Sharma', email: 'anya.designer@spacesnap.com', password: password, role: 'designer', isVerified: true },
-        { _id: new mongoose.Types.ObjectId(), name: 'Leo Carter', email: 'leo.designer@spacesnap.com', password: password, role: 'designer', isVerified: true },
-        { _id: new mongoose.Types.ObjectId(), name: 'Premium User', email: 'premium@spacesnap.com', password: password, role: 'premium', isVerified: true },
-        { _id: new mongoose.Types.ObjectId(), name: 'Registered User', email: 'registered@spacesnap.com', password: password, role: 'registered', isVerified: true },
-        { _id: new mongoose.Types.ObjectId(), name: 'John Doe (Pending)', email: 'john.doe@example.com', password: password, role: 'registered', isVerified: true },
-        { _id: new mongoose.Types.ObjectId(), name: 'Jane Smith (Pending)', email: 'jane.smith@example.com', password: password, role: 'registered', isVerified: true },
+        // Your 4 main users
+        { _id: new mongoose.Types.ObjectId(), name: 'Jeyapragash (Admin)', email: 'jeyapragash@gmail.com', password: password, role: 'admin', isVerified: true, createdAt: new Date(now.setDate(now.getDate() - 30)) },
+        { _id: new mongoose.Types.ObjectId(), name: 'Shahnas (Designer)', email: 'shahnas@gmail.com', password: password, role: 'designer', isVerified: true, createdAt: new Date(now.setDate(now.getDate() - 25)) },
+        { _id: new mongoose.Types.ObjectId(), name: 'Akeesha (Registered)', email: 'akeesha@gmail.com', password: password, role: 'registered', isVerified: true, createdAt: new Date(now.setDate(now.getDate() - 20)) },
+        { _id: new mongoose.Types.ObjectId(), name: 'Himna (Premium)', email: 'himna@gmail.com', password: password, role: 'premium', isVerified: true, createdAt: new Date(now.setDate(now.getDate() - 15)) },
+        // More users for a realistic list
+        { _id: new mongoose.Types.ObjectId(), name: 'Pending Designer App', email: 'pending.designer@gmail.com', password: password, role: 'registered', isVerified: true, createdAt: new Date(now.setDate(now.getDate() - 10)) },
+        { _id: new mongoose.Types.ObjectId(), name: 'Leo Carter', email: 'leo.carter@gmail.com', password: password, role: 'registered', isVerified: true, createdAt: new Date(now.setDate(now.getDate() - 5)) },
+        { _id: new mongoose.Types.ObjectId(), name: 'Maria Garcia', email: 'maria.garcia@gmail.com', password: password, role: 'premium', isVerified: true, createdAt: new Date(now.setDate(now.getDate() - 2)) },
+        { _id: new mongoose.Types.ObjectId(), name: 'John Davis (Designer)', email: 'john.davis@gmail.com', password: password, role: 'designer', isVerified: true, createdAt: new Date(now.setDate(now.getDate() - 1)) },
     ];
-
-    const designerAnya = users.find(u => u.email === 'anya.designer@spacesnap.com')._id;
-    const designerLeo = users.find(u => u.email === 'leo.designer@spacesnap.com')._id;
-    const registeredUser = users.find(u => u.email === 'registered@spacesnap.com')._id;
-    const premiumUser = users.find(u => u.email === 'premium@spacesnap.com')._id;
-
-    // --- DESIGNS (Templates created by designers) ---
+    
     const designs = [
-        { user: designerAnya, name: 'Modern Living Room Concept', designData: JSON.stringify({ style: "Modern", colors: ["#FFFFFF", "#333333"] }), thumbnail: 'https://source.unsplash.com/random/400x300?modern,livingroom' },
-        { user: designerAnya, name: 'Scandinavian Kitchen', designData: JSON.stringify({ style: "Scandinavian", colors: ["#F5F5F5", "#87CEEB"] }), thumbnail: 'https://source.unsplash.com/random/400x300?scandinavian,kitchen' },
-        { user: designerLeo, name: 'Bohemian Bedroom Retreat', designData: JSON.stringify({ style: "Bohemian", colors: ["#DCC9B6", "#6B7A6A"] }), thumbnail: 'https://source.unsplash.com/random/400x300?bohemian,bedroom' },
-        { user: designerLeo, name: 'Industrial Workspace', designData: JSON.stringify({ style: "Industrial", colors: ["#424242", "#CF5C36"] }), thumbnail: 'https://source.unsplash.com/random/400x300?industrial,office' },
+        { name: 'Himna\'s Modern Living Room', designData: JSON.stringify({ wallColor: '#EAEAEA'}), thumbnail: 'https://source.unsplash.com/random/400x300?modern,livingroom', user: users[3]._id },
+        { name: 'Akeesha\'s Cozy Corner', designData: JSON.stringify({ wallColor: '#DCC9B6'}), thumbnail: 'https://source.unsplash.com/random/400x300?cozy,bedroom', user: users[2]._id },
+        { name: 'Himna\'s Minimalist Office', designData: JSON.stringify({ wallColor: '#F5F5F5'}), thumbnail: 'https://source.unsplash.com/random/400x300?minimalist,office', user: users[3]._id },
+        { name: 'Maria\'s Scandinavian Dining', designData: JSON.stringify({ wallColor: '#FFFFFF'}), thumbnail: 'https://source.unsplash.com/random/400x300?scandinavian,dining', user: users[6]._id },
+        { name: 'Akeesha\'s First Design', designData: JSON.stringify({ wallColor: '#87986a'}), thumbnail: 'https://source.unsplash.com/random/400x300?interior,design', user: users[2]._id },
     ];
 
-    // --- CONSULTATIONS (Requested by users, assigned to designers) ---
     const consultations = [
-        { user: registeredUser, designer: designerAnya, subject: 'Help with my living room layout', message: 'I have an oddly shaped living room and I\'m not sure where to place my sofa. Can you help?', status: 'Pending' },
-        { user: registeredUser, designer: designerLeo, subject: 'Color Palette Advice', message: 'I love the minimalist style but I\'m afraid of it looking too cold.', status: 'Completed' },
-        { user: premiumUser, designer: designerAnya, subject: 'Urgent: Need help choosing furniture for new apartment', message: 'I am moving next week and need to buy furniture quickly. I like the modern style.', status: 'Pending' },
+        { subject: 'Help with my small apartment', message: 'Hi Shahnas, I need help making my small apartment feel bigger.', status: 'Pending', user: users[3]._id, designer: users[1]._id },
+        { subject: 'Color palette advice', message: 'I\'m struggling to pick a color for my bedroom.', status: 'Accepted', user: users[2]._id, designer: users[1]._id },
+        { subject: 'Furniture placement for office', message: 'Hi John, I need help arranging my home office for productivity.', status: 'Pending', user: users[6]._id, designer: users[7]._id },
+        { subject: 'Full Home Redesign', message: 'We just bought a new house and need help with everything!', status: 'Completed', user: users[6]._id, designer: users[1]._id },
     ];
 
     return { users, designs, consultations };
 };
 
-// --- SCRIPT FUNCTIONS ---
+// --- IMPORT FUNCTION ---
 const importData = async () => {
   try {
-    console.log('Wiping existing data from all collections...');
+    console.log('Wiping all existing data...');
     await Consultation.deleteMany();
     await Design.deleteMany();
     await User.deleteMany();
@@ -75,7 +72,7 @@ const importData = async () => {
     const { users, designs, consultations } = createSampleData();
 
     console.log('Importing Users...');
-    // We create users one by one to ensure the pre-save password hash hook runs for each.
+    // We create users one by one to ensure the pre-save password hash hook runs for each
     for (const userData of users) {
         const user = new User(userData);
         await user.save();
@@ -87,37 +84,24 @@ const importData = async () => {
     console.log('Importing Consultations...');
     await Consultation.insertMany(consultations);
 
-    console.log('\n✅✅✅ Data Imported Successfully! ✅✅✅');
-    console.log(`Created ${users.length} users, ${designs.length} designs, and ${consultations.length} consultations.`);
+    console.log('\n✅✅✅ Detailed Data Imported Successfully! ✅✅✅\n');
+    console.log('You can now log in with the following credentials (password for all is "password1"):');
+    console.log('----------------------------------------------------');
+    users.forEach(u => {
+        console.log(`${u.role.padEnd(10, ' ')}: ${u.email}`);
+    });
+    console.log('----------------------------------------------------');
+
     process.exit();
   } catch (error) {
-    console.error(`\n❌ Error importing data: ${error}`);
+    console.error(`❌ Error importing data: ${error}`);
     process.exit(1);
   }
 };
 
-const destroyData = async () => {
-    try {
-        await Consultation.deleteMany();
-        await Design.deleteMany();
-        await User.deleteMany();
-        console.log('✅ Data Destroyed Successfully!');
-        process.exit();
-    } catch (error) {
-        console.error(`❌ Error destroying data: ${error}`);
-        process.exit(1);
-    }
-};
-
-// --- SCRIPT RUNNER ---
 const runSeeder = async () => {
   await connectDB();
-  
-  if (process.argv[2] === '-d') {
-    await destroyData();
-  } else {
-    await importData();
-  }
+  await importData();
 };
 
 runSeeder();
