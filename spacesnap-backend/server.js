@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes'); // The only other route file we need for admin
 const quizRoutes = require('./routes/quizRoutes');
+const debugQuizRoutes = require('./routes/debugQuizRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 
 const startServer = async () => {
@@ -18,6 +19,7 @@ const startServer = async () => {
   app.use('/api/users', userRoutes); // For public actions
   app.use('/api/admin', adminRoutes); // For all protected admin actions
   app.use('/api/quiz', quizRoutes); // Quiz routes
+  app.use('/api/debug', debugQuizRoutes); // Debug routes
   app.use('/api/images', imageRoutes); // Image upload and retrieval routes
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => console.log(`🚀 Server is listening on port ${PORT}`));

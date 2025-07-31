@@ -25,6 +25,11 @@ const QuizResultSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  styleRoomImages: [{
+    roomType: String,
+    imageUrl: String,
+    imageName: String
+  }],
   styleScores: {
     type: Map,
     of: Number

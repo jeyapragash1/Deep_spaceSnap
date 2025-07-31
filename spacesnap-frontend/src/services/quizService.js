@@ -71,6 +71,16 @@ const quizService = {
         data.styleDetails.image = `http://localhost:5000${data.styleDetails.image}`;
       }
       
+      // Convert styleRoomImages URLs
+      if (data.styleRoomImages && Array.isArray(data.styleRoomImages)) {
+        data.styleRoomImages = data.styleRoomImages.map(room => ({
+          ...room,
+          imageUrl: room.imageUrl.startsWith('/api/images/') 
+            ? `http://localhost:5000${room.imageUrl}` 
+            : room.imageUrl
+        }));
+      }
+      
       return data;
     } catch (error) {
       console.error('Error submitting quiz:', error);
@@ -93,6 +103,16 @@ const quizService = {
       }
       if (data.styleDetails && data.styleDetails.image && data.styleDetails.image.startsWith('/api/images/')) {
         data.styleDetails.image = `http://localhost:5000${data.styleDetails.image}`;
+      }
+      
+      // Convert styleRoomImages URLs
+      if (data.styleRoomImages && Array.isArray(data.styleRoomImages)) {
+        data.styleRoomImages = data.styleRoomImages.map(room => ({
+          ...room,
+          imageUrl: room.imageUrl.startsWith('/api/images/') 
+            ? `http://localhost:5000${room.imageUrl}` 
+            : room.imageUrl
+        }));
       }
       
       return data;

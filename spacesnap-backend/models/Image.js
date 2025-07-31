@@ -9,11 +9,11 @@ const ImageSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['quiz', 'style', 'general']
+    enum: ['quiz', 'style', 'general', 'quiz-questions', 'style-rooms']
   },
   subcategory: {
     type: String,
-    enum: ['room', 'palette', 'texture', 'art', 'furniture', 'lighting']
+    enum: ['room', 'palette', 'texture', 'art', 'furniture', 'lighting', 'bohemian', 'industrial', 'rustic', 'scandinavian', 'shabby-chic', 'minimalist', 'modern']
   },
   description: String,
   data: {
@@ -32,6 +32,15 @@ const ImageSchema = new mongoose.Schema({
   width: Number,
   height: Number,
   tags: [String],
+  metadata: {
+    questionNumber: Number,
+    answerId: String,
+    description: String,
+    stylePoints: mongoose.Schema.Types.Mixed,
+    style: String,
+    roomType: String,
+    originalName: String
+  },
   createdAt: {
     type: Date,
     default: Date.now
