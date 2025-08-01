@@ -1,4 +1,6 @@
 // src/context/AuthContext.jsx
+// --- THIS IS THE CORRECTED FILE ---
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -35,7 +37,10 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const res = await axios.post('http://localhost:5000/api/users/login', { email, password });
+            // --- FIX: THIS IS THE ONLY CHANGE FOR LOGIN ---
+            // We changed 'localhost:5000' to your computer's IP address
+            const res = await axios.post('http://192.168.171.173:5000/api/users/login', { email, password });
+            
             setToken(res.data.token);
             const from = location.state?.from?.pathname || "/dashboard";
             navigate(from, { replace: true });

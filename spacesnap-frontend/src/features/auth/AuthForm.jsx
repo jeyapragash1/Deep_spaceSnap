@@ -1,4 +1,6 @@
 // src/features/auth/AuthForm.jsx
+// --- THIS IS THE CORRECTED FILE ---
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
@@ -25,20 +27,15 @@ const AuthForm = () => {
     const handleLoginChange = e => setLoginData({ ...loginData, [e.target.name]: e.target.value });
     const handleRegisterChange = e => setRegisterData({ ...registerData, [e.target.name]: e.target.value });
 
-    // --- THIS IS THE CORRECTED LOGIN SUBMIT FUNCTION ---
     const handleLoginSubmit = async (e) => {
         e.preventDefault(); 
         setLoading(true); 
         setError('');
         try {
             await login(loginData.email, loginData.password);
-            // On success, AuthContext will handle the redirect.
-            // We don't need to do anything here.
         } catch (err) {
             setError(err.message || 'Login failed. Please check your credentials.');
         } finally {
-            // This 'finally' block GUARANTEES that loading is set back to false,
-            // whether the login succeeds or fails. This stops the infinite spinner.
             setLoading(false);
         }
     };
@@ -46,7 +43,10 @@ const AuthForm = () => {
     const handleRegisterSubmit = async (e) => {
         e.preventDefault(); setLoading(true); setError('');
         try {
-            const res = await axios.post('http://localhost:5000/api/users/register', registerData);
+            // --- FIX: THIS IS THE ONLY CHANGE FOR REGISTRATION ---
+            // We changed 'localhost:5000' to your computer's IP address
+            const res = await axios.post('http://192.168.171.173:5000/api/users/register', registerData);
+            
             alert(res.data.msg); // Show "Registration successful! Please log in."
             setIsLoginView(true); // Switch to login view
         } catch (err) {
