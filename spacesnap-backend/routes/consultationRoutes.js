@@ -5,6 +5,7 @@ const router = express.Router();
 const Consultation = require('../models/Consultation');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
+const Design = require('../models/Design');
 
 // @route   POST api/consultations
 // @desc    Book a new consultation (User action)
@@ -175,8 +176,40 @@ router.post('/:id/reply', authMiddleware, async (req, res) => {
 
         res.status(201).json(populatedConsultation);
 
-    } catch (error) {
+    } catch (error) { // --- THIS IS THE FIX: ADDED CURLY BRACES ---
         console.error('Error adding reply:', error.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET api/consultations/designer/stats
+// @desc    Get key stats for the logged-in designer
+// @access  Private (Designer Only)
+router.get('/designer/stats', authMiddleware, async (req, res) => {
+    try {
+        const designerId = req.user.userId;
+
+        const [
+            pendingCount,
+            acceptedCount,
+            completedCount,
+            contentCount
+        ] = await Promise.all([
+            Consultation.countDocuments({ designer: designerId, status: 'Pending' }),
+            Consultation.countDocuments({ designer: designerId, status: 'Accepted' }),
+            Consultation.countDocuments({ designer: designerId, status: 'Completed' }),
+            Design.countDocuments({ user: designerId })
+        ]);
+
+        res.json({
+            pending: pendingCount,
+            active: acceptedCount,
+            completed: completedCount,
+            totalContent: contentCount
+        });
+
+    } catch (error) {
+        console.error('Error fetching designer stats:', error.message);
         res.status(500).send('Server Error');
     }
 });

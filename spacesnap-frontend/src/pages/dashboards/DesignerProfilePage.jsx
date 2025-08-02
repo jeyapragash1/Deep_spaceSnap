@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axiosConfig';
-import { User, Briefcase, Sparkles, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const Input = ({ label, id, ...props }) => (
     <div>
@@ -20,12 +20,15 @@ const Textarea = ({ label, id, ...props }) => (
 );
 
 const DesignerProfilePage = () => {
-    const { user, updateUserContext } = useAuth();
+    // --- THIS IS THE FIX: Get the updateUserState function from context ---
+    const { user, updateUserState } = useAuth();
+    
     const [formData, setFormData] = useState({ name: '', bio: '', specialties: '' });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
+        // Pre-fill form when user data is available
         if (user) {
             setFormData({
                 name: user.name || '',
@@ -42,15 +45,25 @@ const DesignerProfilePage = () => {
         setLoading(true);
         setMessage({ type: '', text: '' });
         try {
+            // This API call is already succeeding
             const res = await api.put('/users/profile', formData);
+            
+            // --- THIS IS THE FIX: Update the global state with the new user data ---
+            updateUserState(res.data);
+            
             setMessage({ type: 'success', text: 'Profile updated successfully!' });
-            updateUserContext({ user: res.data });
         } catch (error) {
+            // This 'catch' block is what's incorrectly showing the error message
             setMessage({ type: 'error', text: 'Failed to update profile.' });
+            console.error("Profile update failed:", error);
         } finally {
             setLoading(false);
         }
     };
+
+    if (!user) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin text-blue-600" size={48} /></div>;
+    }
 
     return (
         <div className="space-y-6">
@@ -58,10 +71,10 @@ const DesignerProfilePage = () => {
             <div className="bg-white p-8 rounded-xl shadow-md border">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="flex items-center gap-4">
-                        <img src={user?.avatar} alt={user?.name} className="w-20 h-20 rounded-full" />
+                        <img src={user.avatar || `https://i.pravatar.cc/150?u=${user._id}`} alt={user.name} className="w-20 h-20 rounded-full" />
                         <div>
-                             <h2 className="text-2xl font-bold text-gray-800">{user?.name}</h2>
-                             <p className="text-gray-500">{user?.email}</p>
+                             <h2 className="text-2xl font-bold text-gray-800">{user.name}</h2>
+                             <p className="text-gray-500">{user.email}</p>
                         </div>
                     </div>
                     
