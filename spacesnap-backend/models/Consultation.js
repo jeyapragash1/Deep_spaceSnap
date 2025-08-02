@@ -1,33 +1,37 @@
 // models/Consultation.js
-const mongoose = require('mongoose');
 
-const consultationSchema = new mongoose.Schema({
-    user: { // The user requesting the consultation
-        type: mongoose.Schema.Types.ObjectId,
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+const consultationSchema = new Schema({
+    user: { 
+        type: Schema.Types.ObjectId,
         ref: 'User',
         required: true,
     },
-    designer: { // The designer they selected
-        type: mongoose.Schema.Types.ObjectId,
+    designer: {
+        type: Schema.Types.ObjectId,
         ref: 'User',
         required: true,
     },
     subject: {
         type: String,
         required: [true, 'Please provide a subject for your consultation.'],
+        trim: true,
     },
     message: {
         type: String,
         required: [true, 'Please provide a message detailing your request.'],
+        trim: true,
     },
     status: {
         type: String,
         enum: ['Pending', 'Accepted', 'Completed', 'Cancelled'],
         default: 'Pending',
     },
-    // We can add fields for replies later
+    // This is a great idea for future expansion
     // replies: [{ from: String, message: String, date: Date }]
-}, { timestamps: true });
+}, { timestamps: true }); // `createdAt` and `updatedAt` are automatically managed
 
 const Consultation = mongoose.model('Consultation', consultationSchema);
 module.exports = Consultation;

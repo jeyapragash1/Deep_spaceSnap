@@ -101,6 +101,7 @@ const AppRoutes = () => {
         </Route>
 
         <Route path="/visualizer" element={<AiVisualizerPage />} />
+        <Route path="/visualizer/:designId" element={<AiVisualizerPage />} />
         <Route path="/upgrade" element={<UpgradePage />} />
 
         {/* === ADMIN ROUTES === */}

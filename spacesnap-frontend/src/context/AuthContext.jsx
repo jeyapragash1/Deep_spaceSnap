@@ -1,17 +1,11 @@
 // src/context/AuthContext.jsx
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+// --- THIS IS THE FIX: Use our single, configured axios instance for all calls ---
+import api from '../api/axiosConfig'; 
 
 const AuthContext = createContext(null);
-
-const setAuthToken = (token) => {
-  if (token) {
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  } else {
-    delete axios.defaults.headers.common["Authorization"];
-  }
-};
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("spaceSnapToken"));
@@ -22,34 +16,39 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       localStorage.setItem("spaceSnapToken", token);
-      setAuthToken(token);
-      if (!user) profile(); // Only fetch profile if user is not already set
+      if (!user) {
+        profile().catch(() => {
+          // If fetching profile fails (e.g., bad token), log the user out.
+          setToken(null);
+        });
+      }
     } else {
       localStorage.removeItem("spaceSnapToken");
-      setAuthToken(null);
       setUser(null);
     }
   }, [token]);
 
   const profile = async () => {
-    if (!token) throw new Error("Not authenticated");
     try {
-      const res = await axios.get("http://localhost:5000/api/users/profile");
+      // Use our 'api' instance which automatically sends the token
+      const res = await api.get("/users/profile");
       setUser(res.data);
       return res.data;
     } catch (error) {
+      console.error("Profile fetch failed:", error);
+      // This will be caught by the useEffect to log the user out.
       throw new Error(error.response?.data?.msg || "Failed to fetch profile.");
     }
   };
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post("http://localhost:5000/api/users/login", {
-        email,
-        password,
-      });
-      setToken(res.data.accessToken);
+      // Use 'api' for the login request
+      const res = await api.post("/users/login", { email, password });
+      
+      setToken(res.data.accessToken); 
       setUser(res.data.user);
+      
       const from = location.state?.from?.pathname || "/dashboard";
       navigate(from, { replace: true });
     } catch (err) {
@@ -58,12 +57,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (token, role) => {
+  const loginWithGoogle = async (credential, role) => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/users/auth/google",
-        { credential: token, role }
-      );
+      // Use 'api' for the Google login request
+      const res = await api.post("/users/auth/google", { credential, role });
       setToken(res.data.accessToken);
       setUser(res.data.user);
       const from = location.state?.from?.pathname || "/dashboard";
@@ -71,31 +68,23 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       setToken(null);
       throw new Error(
-        JSON.stringify(
-          err.response?.data || {
-            msg: "Google login failed. Please try again.",
-            email: "",
-          }
-        )
+        JSON.stringify(err.response?.data || { msg: "Google login failed.", email: "" })
       );
     }
   };
 
   const logout = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/api/users/logout");
-      if (res.status === 200) {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem("spaceSnapToken");
-      }
+      await api.post("/users/logout");
     } catch (err) {
-      throw new Error(err.response?.data?.msg || "Logout failed.");
+      console.error("Server-side logout failed:", err);
+    } finally {
+      setToken(null);
+      setUser(null); 
+      navigate("/login");
     }
-    navigate("/login");
   };
 
-  // This function is critical for the upgrade flow
   const updateUserToken = (newToken) => {
     setToken(newToken);
   };

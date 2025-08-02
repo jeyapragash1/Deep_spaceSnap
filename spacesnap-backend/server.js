@@ -1,27 +1,49 @@
 // server.js
+
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 dotenv.config();
+
 const connectDB = require('./config/db');
+
+// --- Route Imports ---
 const userRoutes = require('./routes/userRoutes');
-const adminRoutes = require('./routes/adminRoutes'); // The only other route file we need for admin
+const adminRoutes = require('./routes/adminRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const debugQuizRoutes = require('./routes/debugQuizRoutes');
 const imageRoutes = require('./routes/imageRoutes');
+const consultationRoutes = require('./routes/consultations');
+const designRoutes = require('./routes/designs');
 
 const startServer = async () => {
+  // Connect to the database first
   await connectDB();
+
   const app = express();
+
+  // --- Middleware ---
   app.use(cors());
-  app.use(express.json({ limit: '10mb' }));
+  // Use express.json() to parse JSON bodies, with an increased limit for image data
+  app.use(express.json({ limit: '50mb' })); 
+
+  // --- API Routes ---
+  // A simple test route to confirm the API is running
   app.get('/', (req, res) => res.send('API is running...'));
-  app.use('/api/users', userRoutes); // For public actions
-  app.use('/api/admin', adminRoutes); // For all protected admin actions
-  app.use('/api/quiz', quizRoutes); // Quiz routes
-  app.use('/api/debug', debugQuizRoutes); // Debug routes
-  app.use('/api/images', imageRoutes); // Image upload and retrieval routes
+
+  // Mount all the different route handlers
+  app.use('/api/users', userRoutes);
+  app.use('/api/admin', adminRoutes);
+  app.use('/api/quiz', quizRoutes);
+  app.use('/api/debug', debugQuizRoutes);
+  app.use('/api/images', imageRoutes);
+  app.use('/api/consultations', consultationRoutes);
+  app.use('/api/designs', designRoutes);
+
+  // --- Server Initialization ---
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => console.log(`🚀 Server is listening on port ${PORT}`));
 };
+
+// Start the server
 startServer();
