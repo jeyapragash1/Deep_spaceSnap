@@ -133,6 +133,40 @@ router.get('/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// ... (at the end of your consultations.js file)
+
+// @route   GET api/consultations/designer/stats
+// @desc    Get key stats for the logged-in designer
+// @access  Private (Designer Only)
+router.get('/designer/stats', authMiddleware, async (req, res) => {
+    try {
+        const designerId = req.user.userId;
+
+        // Run database queries in parallel for performance
+        const [
+            pendingCount,
+            acceptedCount,
+            completedCount,
+            contentCount
+        ] = await Promise.all([
+            Consultation.countDocuments({ designer: designerId, status: 'Pending' }),
+            Consultation.countDocuments({ designer: designerId, status: 'Accepted' }),
+            Consultation.countDocuments({ designer: designerId, status: 'Completed' }),
+            Design.countDocuments({ user: designerId }) // Count their content
+        ]);
+
+        res.json({
+            pending: pendingCount,
+            active: acceptedCount,
+            completed: completedCount,
+            totalContent: contentCount
+        });
+
+    } catch (error) {
+        console.error('Error fetching designer stats:', error.message);
+        res.status(500).send('Server Error');
+    }
+});
 // @route   POST api/consultations/:id/reply
 // @desc    Add a reply to a consultation
 // @access  Private (User or Designer)

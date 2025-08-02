@@ -70,9 +70,8 @@ const UserDashboardLayout = () => {
     ];
   };
 
-  const getDesignerLinks = () => [
+   const getDesignerLinks = () => [
     { to: '/designer/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    // --- THIS IS THE CORRECTED LINK ---
     { to: '/designer/content', icon: <Briefcase size={20} />, label: 'My Content' },
     { to: '/designer/analytics', icon: <BarChart2 size={20} />, label: 'Analytics' },
     { to: '/designer/profile', icon: <User size={20} />, label: 'Profile' },

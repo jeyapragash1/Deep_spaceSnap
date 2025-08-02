@@ -17,7 +17,8 @@ import ContactPage from '../pages/ContactPage';
 import PortfolioPage from '../pages/PortfolioPage';
 import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
 import TermsOfServicePage from '../pages/TermsOfServicePage';
-
+import DesignerAnalyticsPage from '../pages/dashboards/DesignerAnalyticsPage'; 
+import DesignerProfilePage from '../pages/dashboards/DesignerProfilePage';
 // --- AUTH PAGES ---
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
@@ -133,6 +134,8 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<DesignerDashboardPage />} />
           {/* --- ADD THE NEW ROUTE FOR THE DESIGNER'S CONTENT PAGE --- */}
           <Route path="content" element={<MyContentPage />} />
+          <Route path="analytics" element={<DesignerAnalyticsPage />} /> 
+          <Route path="profile" element={<DesignerProfilePage />} /> 
           <Route path="consultations/:consultationId" element={<ConsultationDetailPage />} />
         </Route>
       </Route>

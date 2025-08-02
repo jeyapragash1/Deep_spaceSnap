@@ -434,10 +434,13 @@ router.get("/profile", authMiddleware, async (req, res) => {
   }
 });
 
+// In userRoutes.js, replace the existing PUT /profile route
+
 // --- UPDATE USER PROFILE (PUT /api/users/profile) ---
 router.put("/profile", authMiddleware, async (req, res) => {
   try {
-    const { name } = req.body; 
+    // --- MODIFIED: Destructure new fields from the body ---
+    const { name, bio, specialties } = req.body;
 
     const user = await User.findOne({ email: req.user.email });
 
@@ -445,16 +448,22 @@ router.put("/profile", authMiddleware, async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
+    // Update the fields if they were provided
     if (name) user.name = name;
+    if (bio) user.bio = bio;
+    if (specialties) user.specialties = specialties;
 
     await user.save();
 
+    // Send back the updated user information
     res.json({
       id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
       avatar: user.avatar,
+      bio: user.bio,
+      specialties: user.specialties
     });
   } catch (error) {
     console.error("Update profile error:", error.message);

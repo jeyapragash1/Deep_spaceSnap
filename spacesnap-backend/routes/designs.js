@@ -29,6 +29,34 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
+// ... (at the end of your designs.js file)
+
+// @route   DELETE api/designs/:id
+// @desc    Delete a design
+// @access  Private
+router.delete('/:id', authMiddleware, async (req, res) => {
+    try {
+        const design = await Design.findById(req.params.id);
+
+        if (!design) {
+            return res.status(404).json({ msg: 'Design not found' });
+        }
+
+        // Security check: Make sure the user deleting the design is the one who created it
+        if (design.user.toString() !== req.user.userId) {
+            return res.status(401).json({ msg: 'Not authorized to delete this design' });
+        }
+
+        await design.deleteOne();
+
+        res.json({ msg: 'Design removed successfully' });
+
+    } catch (err) {
+        console.error("Error deleting design:", err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/designs/mydesigns
 // @desc    Get all designs for the currently logged-in user
 // @access  Private
