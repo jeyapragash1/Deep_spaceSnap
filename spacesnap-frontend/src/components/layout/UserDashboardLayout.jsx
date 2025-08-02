@@ -1,56 +1,128 @@
 // src/components/layout/UserDashboardLayout.jsx
+
 import React from 'react';
-import { NavLink, Outlet, Link } from 'react-router-dom'; // <-- IMPORT Outlet
+import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaTachometerAlt, FaPalette, FaMagic, FaVectorSquare, FaUser, FaSignOutAlt, FaCube, FaLock } from 'react-icons/fa';
-import DashboardHeader from './DashboardHeader';
+import {
+  LayoutDashboard,
+  Palette,
+  Sparkles,
+  Camera,
+  FolderKanban,
+  User,
+  LogOut,
+  Home,
+  Briefcase,
+  BarChart2,
+  Settings
+} from 'lucide-react';
 
-// --- The Sidebar Component ---
-const UserSidebar = () => {
-    const { user, logout } = useAuth();
-    const navLinkClasses = ({ isActive }) => `flex items-center px-4 py-3 rounded-lg transition-colors duration-200 text-gray-700 ${isActive ? 'bg-primary-teal text-white font-semibold' : 'hover:bg-teal-100 hover:text-primary-teal'}`;
-  
+// Reusable Sidebar Link Component
+const SidebarLink = ({ to, icon, children, isPro, isLocked }) => {
+  if (isLocked) {
     return (
-      <aside className="w-64 bg-white shadow-md flex flex-col h-screen p-4 flex-shrink-0">
-        <div className="p-4 text-center border-b mb-4"><h1 className="text-3xl font-bold text-primary-teal">SpaceSnap</h1></div>
-        <nav className="flex-grow space-y-2">
-            <NavLink to="/user/profile" end className={navLinkClasses}><FaTachometerAlt className="mr-3" />Dashboard</NavLink>
-            <NavLink to="/style-quiz" className={navLinkClasses}><FaPalette className="mr-3" />Style Quiz</NavLink>
-            <NavLink to="/visualizer" className={navLinkClasses}><FaMagic className="mr-3" />AI Visualizer</NavLink>
-            
-            {user?.role === 'registered' ? (
-                <Link to="/upgrade" className={`${navLinkClasses({isActive: false})} opacity-60`}>
-                    <FaLock className="mr-3" />AR Preview
-                    <span className="ml-auto text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full">PRO</span>
-                </Link>
-            ) : (
-                <NavLink to="/ar-preview" className={navLinkClasses}><FaCube className="mr-3" />AR Preview</NavLink>
-            )}
-
-            <NavLink to="/user/designs" className={navLinkClasses}><FaVectorSquare className="mr-3" />My Designs</NavLink>
-            <NavLink to="/user/account" className={navLinkClasses}><FaUser className="mr-3" />Account</NavLink>
-        </nav>
-        <div className="p-4 border-t"><button onClick={logout} className="w-full flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-red-100 hover:text-red-700"><FaSignOutAlt className="mr-3" /> Logout</button></div>
-      </aside>
+      <Link
+        to="/upgrade"
+        className="flex items-center px-4 py-3 text-gray-500 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
+      >
+        {icon}
+        <span className="ml-3 font-medium">{children}</span>
+        <span className="ml-auto text-xs bg-yellow-400 text-yellow-900 font-bold px-2 py-0.5 rounded-full">PRO</span>
+      </Link>
     );
+  }
+
+  return (
+    <NavLink
+      to={to}
+      end
+      className={({ isActive }) =>
+        `flex items-center px-4 py-3 rounded-lg transition-colors duration-200 text-gray-600 font-medium ${
+          isActive ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'
+        }`
+      }
+    >
+      {icon}
+      <span className="ml-3">{children}</span>
+    </NavLink>
+  );
 };
-  
-// --- The Main Layout Component ---
+
 const UserDashboardLayout = () => {
-    return (
-        <div className="flex h-screen bg-neutral-light">
-            <UserSidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <DashboardHeader />
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-neutral-light p-6">
-                    {/* --- THIS IS THE FIX --- */}
-                    {/* The <Outlet /> tells React Router where to render the child pages */}
-                    {/* (e.g., UserProfilePage, DesignerDashboardPage, etc.) */}
-                    <Outlet />
-                </main>
-            </div>
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // --- Sidebar Links based on User Role ---
+  const getUserLinks = () => {
+    const isRegistered = user?.role === 'registered';
+    return [
+      { to: '/user/profile', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+      { to: '/style-quiz', icon: <Palette size={20} />, label: 'Style Quiz' },
+      { to: '/visualizer', icon: <Sparkles size={20} />, label: 'AI Visualizer' },
+      { to: '/ar-preview', icon: <Camera size={20} />, label: 'AR Preview', isLocked: isRegistered },
+      { to: '/user/designs', icon: <FolderKanban size={20} />, label: 'My Designs' },
+      { to: '/user/account', icon: <Settings size={20} />, label: 'Account' },
+    ];
+  };
+
+  const getDesignerLinks = () => [
+    { to: '/designer/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+    { to: '/designer/content', icon: <Briefcase size={20} />, label: 'My Content' },
+    { to: '/designer/analytics', icon: <BarChart2 size={20} />, label: 'Analytics' },
+    { to: '/designer/profile', icon: <User size={20} />, label: 'Profile' },
+  ];
+
+  const links = user?.role === 'designer' ? getDesignerLinks() : getUserLinks();
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* --- Sidebar --- */}
+      <aside className="w-64 flex-shrink-0 bg-white border-r flex flex-col p-4">
+        <Link to="/" className="text-2xl font-bold text-gray-800 mb-8 px-4 flex items-center gap-2">
+          <Sparkles className="text-blue-600"/>
+          <span>SpaceSnap</span>
+        </Link>
+
+        <nav className="flex-grow space-y-2">
+          {links.map((link) => (
+            <SidebarLink key={link.label} to={link.to} icon={link.icon} isLocked={link.isLocked}>
+              {link.label}
+            </SidebarLink>
+          ))}
+        </nav>
+
+        {/* --- Bottom Sidebar Actions --- */}
+        <div className="pt-4 border-t">
+          <SidebarLink to="/" icon={<Home size={20} />}>Home Page</SidebarLink>
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full mt-2 px-4 py-3 text-gray-600 font-medium hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+          >
+            <LogOut size={20} />
+            <span className="ml-3">Logout</span>
+          </button>
         </div>
-    );
+      </aside>
+
+      {/* --- Main Content Area --- */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-white border-b h-16 flex items-center px-6">
+            <h1 className="text-xl font-semibold text-gray-900">
+                Welcome, {user?.name || 'User'}!
+            </h1>
+            {/* You can add notifications or a search bar here later */}
+        </header>
+        <main className="flex-1 overflow-y-auto p-6">
+          <Outlet /> {/* Renders the specific dashboard page */}
+        </main>
+      </div>
+    </div>
+  );
 };
 
 export default UserDashboardLayout;

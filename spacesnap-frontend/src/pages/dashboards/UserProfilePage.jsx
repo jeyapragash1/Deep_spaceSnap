@@ -1,34 +1,48 @@
 // src/pages/dashboards/UserProfilePage.jsx
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { FaPalette, FaRocket, FaEdit, FaComments, FaCrown, FaThLarge, FaQuestionCircle, FaFileContract } from 'react-icons/fa';
+import { Sparkles, Camera, Palette, FolderKanban, MessageSquare, Crown, PlusCircle, ArrowRight } from 'lucide-react';
 import ConsultationModal from '../../components/dashboard/ConsultationModal';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
-// --- Reusable Stat Card Component for this page ---
-const StatCard = ({ title, value, icon }) => (
-    <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center">
-        <div className="text-primary-teal text-3xl mb-2">{icon}</div>
-        <p className="text-3xl font-bold text-neutral-dark">{value}</p>
-        <p className="text-sm text-gray-500 mt-1">{title}</p>
+// Reusable card component for a consistent dashboard look
+const DashboardCard = ({ title, children, className, seeAllLink }) => (
+  <div className={`bg-white rounded-xl shadow p-6 ${className}`}>
+    <div className="flex justify-between items-center mb-4">
+      <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+      {seeAllLink && (
+        <Link to={seeAllLink} className="text-sm font-semibold text-blue-600 hover:underline flex items-center gap-1">
+          See All <ArrowRight size={14} />
+        </Link>
+      )}
     </div>
+    {children}
+  </div>
+);
+
+// Quick action card for the top row
+const ActionCard = ({ to, icon, title, description, colorClass }) => (
+    <Link to={to} className={`block p-6 rounded-xl shadow-lg transition-transform hover:scale-105 ${colorClass}`}>
+        {icon}
+        <h3 className="text-xl font-bold mt-2">{title}</h3>
+        <p className="text-sm opacity-90">{description}</p>
+    </Link>
 );
 
 const UserProfilePage = () => {
     const { user } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     
-    // --- NEW STATE FOR FETCHED DATA ---
-    const [stats, setStats] = useState({ designs: 0, quizzes: 0, consultations: 0 });
+    const [stats, setStats] = useState({ designs: 0, consultations: 0 });
     const [recentDesigns, setRecentDesigns] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // Fetch all data in parallel for better performance
                 const [designsRes, consultationsRes] = await Promise.all([
                     axios.get('http://localhost:5000/api/designs/mydesigns'),
                     axios.get('http://localhost:5000/api/consultations/myconsultations')
@@ -36,10 +50,8 @@ const UserProfilePage = () => {
                 
                 setStats({
                     designs: designsRes.data.length,
-                    consultations: consultationsRes.data.length,
-                    quizzes: 1 // Dummy data for now
+                    consultations: consultationsRes.data.length
                 });
-                // Get the 3 most recent designs to display
                 setRecentDesigns(designsRes.data.slice(0, 3));
 
             } catch (err) {
@@ -59,74 +71,82 @@ const UserProfilePage = () => {
     }
 
     return (
-        <div>
+        <div className="space-y-6">
             <ConsultationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
-            {/* --- HEADER --- */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6 flex items-center gap-6">
-                <img src={user?.avatar} alt="User Avatar" className="w-20 h-20 rounded-full border-4 border-primary-teal" />
-                <div>
-                    <h2 className="text-3xl font-bold text-neutral-dark">Welcome, {user?.name}!</h2>
-                    <div className="mt-1">
-                        {user?.role === 'premium' ? (
-                            <span className="flex items-center gap-1 text-sm bg-yellow-400 text-yellow-900 font-semibold px-3 py-1 rounded-full"><FaCrown /> Premium Member</span>
-                        ) : (
-                            <span className="text-sm bg-gray-200 text-gray-800 font-semibold px-3 py-1 rounded-full">Registered User</span>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* --- STAT CARDS --- */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <StatCard title="Saved Designs" value={stats.designs} icon={<FaThLarge />} />
-                <StatCard title="Quizzes Taken" value={stats.quizzes} icon={<FaQuestionCircle />} />
-                <StatCard title="Consultations" value={stats.consultations} icon={<FaFileContract />} />
+            {/* --- TOP ROW: Quick Actions --- */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
+                <ActionCard to="/visualizer" icon={<Sparkles size={32} />} title="AI Visualizer" description="Upload a photo to start" colorClass="bg-blue-500 hover:bg-blue-600" />
+                <ActionCard to={user?.role === 'premium' ? "/ar-preview" : "/upgrade"} icon={<Camera size={32} />} title="AR Preview" description="See furniture in your room" colorClass="bg-purple-500 hover:bg-purple-600" />
+                <ActionCard to="/style-quiz" icon={<Palette size={32} />} title="Find Your Style" description="Take the style quiz" colorClass="bg-green-500 hover:bg-green-600" />
             </div>
 
             {/* --- UPGRADE BANNER (for registered users) --- */}
             {user?.role === 'registered' && (
-                <div className="bg-orange-400 text-white p-4 rounded-lg mb-6 flex items-center justify-between shadow-lg">
-                    <div><h3 className="font-bold text-lg">Unlock Your Full Design Potential!</h3><p>Upgrade to Premium for full AR Preview access, unlimited designs, and more.</p></div>
-                    <Link to="/upgrade" className="bg-white text-orange-500 px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><FaRocket /> Upgrade Now</Link>
+                <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-6 rounded-xl flex items-center justify-between shadow-lg">
+                    <div className="flex items-center gap-4">
+                        <Crown size={40} />
+                        <div>
+                            <h3 className="font-bold text-xl">Unlock Your Full Design Potential!</h3>
+                            <p className="opacity-90">Upgrade to Premium for full AR access, unlimited designs, and more.</p>
+                        </div>
+                    </div>
+                    <Link to="/upgrade" className="bg-white text-orange-500 px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow hover:bg-gray-100 shrink-0">
+                        Upgrade Now
+                    </Link>
                 </div>
             )}
-            
-            {/* --- CONTENT SECTIONS --- */}
+
+            {/* --- MAIN CONTENT GRID --- */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="font-semibold text-lg mb-4">My Recent Designs</h3>
+                
+                {/* --- Recent Projects Column --- */}
+                <DashboardCard title="Recent Designs" className="lg:col-span-2" seeAllLink="/user/designs">
                     {recentDesigns.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {recentDesigns.map(design => (
-                                <div key={design._id} className="border rounded-lg overflow-hidden group cursor-pointer">
-                                    <img src={design.thumbnail} alt={design.name} className="w-full h-32 object-cover" />
-                                    <p className="p-3 text-sm font-semibold group-hover:text-primary-teal">{design.name}</p>
-                                </div>
+                                <Link to={`/designs/${design._id}`} key={design._id} className="border rounded-lg group overflow-hidden hover:shadow-md transition-shadow">
+                                    <img src={design.thumbnail || 'https://via.placeholder.com/300x200'} alt={design.name} className="w-full h-32 object-cover" />
+                                    <p className="p-3 font-semibold text-gray-700 group-hover:text-blue-600">{design.name}</p>
+                                </Link>
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-10">
-                            <p className="text-gray-500 mb-4">You haven't saved any designs yet.</p>
-                            <Link to="/visualizer" className="bg-primary-teal text-white font-bold py-2 px-4 rounded-lg">Start Designing</Link>
-                        </div>
+                        <Link to="/visualizer" className="text-center py-10 block border-2 border-dashed rounded-lg hover:bg-gray-50">
+                            <PlusCircle className="mx-auto text-gray-400 mb-2" size={32} />
+                            <p className="text-gray-500 font-semibold">Start your first design</p>
+                            <p className="text-sm text-gray-400">Click here to launch the AI Visualizer</p>
+                        </Link>
                     )}
-                </div>
+                </DashboardCard>
 
-                <div className="bg-white p-6 rounded-lg shadow-md flex flex-col">
-                    <h3 className="font-semibold text-lg mb-4">Quick Actions</h3>
-                    <ul className="space-y-4 flex-grow">
-                        <li><Link to="/style-quiz" className="flex items-center gap-3 text-lg text-gray-700 hover:text-primary-teal"><FaPalette /> Take the Style Quiz</Link></li>
-                        <li><Link to="/account" className="flex items-center gap-3 text-lg text-gray-700 hover:text-primary-teal"><FaEdit /> Manage Account</Link></li>
-                    </ul>
-                    <div className="mt-auto pt-4 border-t">
-                        <button onClick={() => setIsModalOpen(true)} className="w-full bg-primary-teal text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-opacity-90">
-                            <FaComments /> Book a Designer
+                {/* --- Stats & Booking Column --- */}
+                <div className="space-y-6">
+                    <DashboardCard title="Your Stats">
+                       <div className="space-y-3">
+                           <div className="flex justify-between items-center text-lg">
+                               <span className="flex items-center gap-2 text-gray-600"><FolderKanban size={20} /> Saved Designs</span>
+                               <span className="font-bold text-gray-800">{stats.designs}</span>
+                           </div>
+                           <div className="flex justify-between items-center text-lg">
+                               <span className="flex items-center gap-2 text-gray-600"><MessageSquare size={20} /> Consultations</span>
+                               <span className="font-bold text-gray-800">{stats.consultations}</span>
+                           </div>
+                       </div>
+                    </DashboardCard>
+                    
+                    <DashboardCard title="Need Expert Help?">
+                        <p className="text-gray-600 mb-4">Book a virtual consultation with a professional interior designer.</p>
+                        <button 
+                            onClick={() => setIsModalOpen(true)} 
+                            className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
+                            <MessageSquare size={20} /> Book a Designer
                         </button>
-                    </div>
+                    </DashboardCard>
                 </div>
             </div>
         </div>
     );
 };
+
 export default UserProfilePage;
