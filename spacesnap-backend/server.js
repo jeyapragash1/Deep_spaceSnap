@@ -15,6 +15,8 @@ const debugQuizRoutes = require('./routes/debugQuizRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 const consultationRoutes = require('./routes/consultations');
 const designRoutes = require('./routes/designs');
+// --- NEW: Import your payment routes file ---
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const startServer = async () => {
   // Connect to the database first
@@ -39,6 +41,8 @@ const startServer = async () => {
   app.use('/api/images', imageRoutes);
   app.use('/api/consultations', consultationRoutes);
   app.use('/api/designs', designRoutes);
+  // --- NEW: Mount the payment routes handler ---
+  app.use('/api/payments', paymentRoutes);
 
   // --- Server Initialization ---
   const PORT = process.env.PORT || 5000;
