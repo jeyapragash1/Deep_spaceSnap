@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-// --- THIS IS THE FIX: Use our single, configured axios instance for all calls ---
 import api from '../api/axiosConfig'; 
 
 const AuthContext = createContext(null);
@@ -18,8 +17,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("spaceSnapToken", token);
       if (!user) {
         profile().catch(() => {
-          // If fetching profile fails (e.g., bad token), log the user out.
-          setToken(null);
+          setToken(null); 
         });
       }
     } else {
@@ -30,25 +28,19 @@ export const AuthProvider = ({ children }) => {
 
   const profile = async () => {
     try {
-      // Use our 'api' instance which automatically sends the token
       const res = await api.get("/users/profile");
       setUser(res.data);
       return res.data;
     } catch (error) {
-      console.error("Profile fetch failed:", error);
-      // This will be caught by the useEffect to log the user out.
       throw new Error(error.response?.data?.msg || "Failed to fetch profile.");
     }
   };
 
   const login = async (email, password) => {
     try {
-      // Use 'api' for the login request
       const res = await api.post("/users/login", { email, password });
-      
       setToken(res.data.accessToken); 
       setUser(res.data.user);
-      
       const from = location.state?.from?.pathname || "/dashboard";
       navigate(from, { replace: true });
     } catch (err) {
@@ -59,7 +51,6 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithGoogle = async (credential, role) => {
     try {
-      // Use 'api' for the Google login request
       const res = await api.post("/users/auth/google", { credential, role });
       setToken(res.data.accessToken);
       setUser(res.data.user);
@@ -77,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await api.post("/users/logout");
     } catch (err) {
-      console.error("Server-side logout failed:", err);
+      console.error("Logout failed but proceeding:", err);
     } finally {
       setToken(null);
       setUser(null); 
@@ -85,9 +76,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const updateUserToken = (newToken) => {
-    setToken(newToken);
+  // --- THIS IS THE KEY FUNCTION ---
+  // A dedicated function to update the user state from other components
+  const updateUserState = (newUserData) => {
+    setUser(newUserData);
   };
+
 
   const value = {
     user,
@@ -95,7 +89,7 @@ export const AuthProvider = ({ children }) => {
     isLoading: user === undefined,
     login,
     logout,
-    updateUserToken,
+    updateUserState, // <-- Expose the function to the rest of the app
     loginWithGoogle,
   };
 
