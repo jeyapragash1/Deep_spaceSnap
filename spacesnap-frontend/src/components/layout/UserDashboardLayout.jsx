@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 // Reusable Sidebar Link Component
-const SidebarLink = ({ to, icon, children, isPro, isLocked }) => {
+const SidebarLink = ({ to, icon, children, isLocked }) => {
   if (isLocked) {
     return (
       <Link
@@ -72,6 +72,7 @@ const UserDashboardLayout = () => {
 
   const getDesignerLinks = () => [
     { to: '/designer/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+    // --- THIS IS THE CORRECTED LINK ---
     { to: '/designer/content', icon: <Briefcase size={20} />, label: 'My Content' },
     { to: '/designer/analytics', icon: <BarChart2 size={20} />, label: 'Analytics' },
     { to: '/designer/profile', icon: <User size={20} />, label: 'Profile' },
@@ -115,10 +116,9 @@ const UserDashboardLayout = () => {
             <h1 className="text-xl font-semibold text-gray-900">
                 Welcome, {user?.name || 'User'}!
             </h1>
-            {/* You can add notifications or a search bar here later */}
         </header>
         <main className="flex-1 overflow-y-auto p-6">
-          <Outlet /> {/* Renders the specific dashboard page */}
+          <Outlet />
         </main>
       </div>
     </div>

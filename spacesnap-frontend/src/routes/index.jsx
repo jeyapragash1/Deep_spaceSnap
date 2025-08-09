@@ -45,8 +45,9 @@ import ConsultationsPage from '../pages/dashboards/ConsultationsPage';
 import ConsultationDetailPage from '../pages/dashboards/ConsultationDetailPage';
 import ContentModeration from '../pages/dashboards/admin/ContentModeration';
 import SystemSettings from '../pages/dashboards/admin/SystemSettings';
-// --- THIS IS THE CORRECTED IMPORT PATH ---
 import DesignersListPage from '../pages/dashboards/DesignersListPage'; 
+// --- IMPORT THE NEW PAGE ---
+import MyContentPage from '../pages/dashboards/MyContentPage';
 
 // --- ROUTING LOGIC COMPONENTS ---
 const ProtectedRouteLogic = () => {
@@ -130,7 +131,8 @@ const AppRoutes = () => {
         {/* === DESIGNER ROUTES === */}
         <Route path="/designer" element={<UserDashboardLayout />}>
           <Route path="dashboard" element={<DesignerDashboardPage />} />
-          <Route path="designs" element={<MyDesignsPage />} />
+          {/* --- ADD THE NEW ROUTE FOR THE DESIGNER'S CONTENT PAGE --- */}
+          <Route path="content" element={<MyContentPage />} />
           <Route path="consultations/:consultationId" element={<ConsultationDetailPage />} />
         </Route>
       </Route>
