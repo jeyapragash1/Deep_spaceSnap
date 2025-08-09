@@ -9,6 +9,8 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import MainLayout from '../components/layout/MainLayout';
 import AdminDashboardLayout from '../components/layout/AdminDashboardLayout';
 import UserDashboardLayout from '../components/layout/UserDashboardLayout';
+import EmailTemplatesPage from '../pages/dashboards/admin/EmailTemplatesPage'; // <-- IMPORT
+import FeatureFlagsPage from '../pages/dashboards/admin/FeatureFlagsPage'; // <-- IMPORT
 
 // --- PUBLIC PAGES ---
 import LandingPage from '../pages/LandingPage';
@@ -111,12 +113,14 @@ const AppRoutes = () => {
         <Route path="/upgrade" element={<UpgradePage />} />
 
         {/* === ADMIN ROUTES === */}
-        <Route path="/admin" element={<AdminDashboardLayout />}>
+         <Route path="/admin" element={<AdminDashboardLayout />}>
           <Route index element={<AdminDashboardOverview />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="approvals" element={<DesignerApprovals />} />
           <Route path="content" element={<ContentModeration />} />
           <Route path="settings" element={<SystemSettings />} />
+          <Route path="email-templates" element={<EmailTemplatesPage />} /> 
+          <Route path="feature-flags" element={<FeatureFlagsPage />} /> 
         </Route>
 
         {/* === USER ROUTES === */}

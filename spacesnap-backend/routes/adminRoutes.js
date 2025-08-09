@@ -4,36 +4,45 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Design = require('../models/Design');
+const EmailTemplate = require('../models/EmailTemplate');
+const Setting = require('../models/Setting');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // --- Middleware: Admin Only Access ---
 const adminOnly = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.userId); 
-
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ msg: 'Admin access required' });
     }
     next();
   } catch (err) {
+    console.error("Admin check failed:", err.message);
     res.status(500).send('Server Error');
   }
 };
 
-// Apply both middlewares to all routes defined in this file
+// Apply both middlewares to all routes defined in this file.
 router.use(authMiddleware, adminOnly);
 
 
 // ---------- DASHBOARD OVERVIEW ----------
 router.get('/stats', async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const totalDesigners = await User.countDocuments({ role: 'designer' });
-    const pendingApprovals = await User.countDocuments({ role: 'registered' });
-    const totalDesigns = await Design.countDocuments(); // Added total designs
-    
+    const [
+        totalUsers, 
+        totalDesigners, 
+        pendingApprovals, 
+        totalDesigns
+    ] = await Promise.all([
+        User.countDocuments(),
+        User.countDocuments({ role: 'designer' }),
+        User.countDocuments({ role: 'registered' }),
+        Design.countDocuments()
+    ]);
     res.json({ totalUsers, totalDesigners, pendingApprovals, totalDesigns });
   } catch (err) {
+    console.error("Admin stats error:", err.message);
     res.status(500).send('Server Error');
   }
 });
@@ -99,7 +108,6 @@ router.get('/designs', async (req, res) => {
     const designs = await Design.find()
       .populate('user', 'name')
       .sort({ createdAt: -1 });
-
     res.json(designs);
   } catch (err) {
     res.status(500).send('Server Error');
@@ -114,5 +122,62 @@ router.delete('/designs/:id', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+
+// ---------- EMAIL TEMPLATES ----------
+router.get('/email-templates', async (req, res) => {
+    try {
+        const templates = await EmailTemplate.find();
+        res.json(templates);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+router.put('/email-templates/:id', async (req, res) => {
+    const { subject, htmlBody } = req.body;
+    try {
+        const updatedTemplate = await EmailTemplate.findByIdAndUpdate(
+            req.params.id,
+            { subject, htmlBody },
+            { new: true }
+        );
+        res.json(updatedTemplate);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// ---------- SYSTEM SETTINGS & FEATURE FLAGS ----------
+router.get('/settings', async (req, res) => {
+    try {
+        let settings = await Setting.findOne({ key: 'main-settings' });
+        if (!settings) {
+            settings = new Setting();
+            await settings.save();
+        }
+        res.json(settings);
+    } catch (err) {
+        console.error('Error fetching settings:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+router.put('/settings', async (req, res) => {
+    const { featureFlags } = req.body;
+    try {
+        const updatedSettings = await Setting.findOneAndUpdate(
+            { key: 'main-settings' },
+            { $set: { featureFlags } },
+            { new: true, upsert: true }
+        );
+        res.json(updatedSettings);
+    } catch (err) {
+        console.error('Error updating settings:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 
 module.exports = router;
