@@ -1,106 +1,171 @@
 // src/components/dashboard/ConsultationModal.jsx
+
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
+import api from '../../api/axiosConfig';
+import { X, Loader2, Send } from 'lucide-react';
 
 const ConsultationModal = ({ isOpen, onClose }) => {
-    const [designers, setDesigners] = useState([]);
-    const [formData, setFormData] = useState({
-        designerId: '',
-        subject: '',
-        message: '',
-    });
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [loading, setLoading] = useState(false);
+  // State for the list of designers
+  const [designers, setDesigners] = useState([]);
+  const [isLoadingDesigners, setIsLoadingDesigners] = useState(true);
+  
+  // State for the form fields
+  const [selectedDesigner, setSelectedDesigner] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
 
-    // Fetch the list of designers when the modal opens
-    useEffect(() => {
-        // Only fetch if the modal is open and the designer list is empty
-        if (isOpen && designers.length === 0) {
-            const fetchDesigners = async () => {
-                try {
-                    const res = await axios.get('http://localhost:5000/api/designers');
-                    setDesigners(res.data);
-                } catch (err) {
-                    setError('Could not load designer list. Please try again later.');
-                    console.error("Failed to fetch designers:", err);
-                }
-            };
-            fetchDesigners();
-        }
-    }, [isOpen, designers.length]);
+  // State for UI feedback
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-    const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Fetch the list of designers when the modal opens
+  useEffect(() => {
+    if (isOpen) {
+      // Reset state every time modal opens
+      setError('');
+      setSuccess('');
+      setIsLoadingDesigners(true);
 
-    const onSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        setSuccess('');
+      const fetchDesigners = async () => {
         try {
-            await axios.post('http://localhost:5000/api/consultations', formData);
-            setSuccess('Your consultation request has been sent successfully!');
-            // Clear form and close modal after a delay
-            setTimeout(() => {
-                onClose(); // Call the parent's function to close the modal
-                // Reset state for next time
-                setFormData({ designerId: '', subject: '', message: '' });
-                setSuccess('');
-            }, 3000);
+          const res = await api.get('/users/designers');
+          setDesigners(res.data);
         } catch (err) {
-            setError(err.response?.data?.msg || 'Failed to send request. Please try again.');
+          setError('Could not load designer list. Please try again later.');
+          console.error("Failed to fetch designers:", err);
         } finally {
-            setLoading(false);
+          setIsLoadingDesigners(false);
         }
-    };
+      };
+      fetchDesigners();
+    }
+  }, [isOpen]);
 
-    // Use AnimatePresence to handle the exit animation
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-                    <motion.div 
-                        initial={{ scale: 0.9, opacity: 0, y: 50 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.9, opacity: 0, y: 50 }}
-                        transition={{ duration: 0.3 }}
-                        className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-lg relative"
-                    >
-                        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl">×</button>
-                        <h2 className="text-2xl font-bold text-neutral-dark mb-6">Book a Consultation</h2>
-                        
-                        {error && <p className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">{error}</p>}
-                        {success && <p className="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm">{success}</p>}
-                        
-                        <form onSubmit={onSubmit}>
-                            <div className="mb-4">
-                                <label htmlFor="designerId" className="block text-sm font-medium text-gray-700 mb-1">Select a Designer</label>
-                                <select id="designerId" name="designerId" value={formData.designerId} onChange={onChange} required className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-teal focus:border-primary-teal">
-                                    <option value="" disabled>-- Choose a Designer --</option>
-                                    {designers.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-                                </select>
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                                <input type="text" id="subject" name="subject" value={formData.subject} onChange={onChange} required placeholder="e.g., Living Room Design Help" className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-teal focus:border-primary-teal" />
-                            </div>
-                            <div className="mb-6">
-                                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Your Message</label>
-                                <textarea id="message" name="message" rows="4" value={formData.message} onChange={onChange} required placeholder="Describe your design needs, what you're struggling with, etc." className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-teal focus:border-primary-teal"></textarea>
-                            </div>
-                            <div className="text-right">
-                                <button type="button" onClick={onClose} className="mr-4 text-gray-600 font-semibold hover:text-gray-900">Cancel</button>
-                                <button type="submit" disabled={loading} className="bg-primary-teal text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 disabled:bg-gray-400">
-                                    {loading ? 'Sending...' : 'Send Request'}
-                                </button>
-                            </div>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
-        </AnimatePresence>
-    );
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedDesigner || !subject || !message) {
+      setError('All fields are required.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const payload = {
+        designerId: selectedDesigner,
+        subject,
+        message,
+      };
+      await api.post('/consultations', payload);
+      setSuccess('Your consultation request has been sent successfully!');
+      
+      // Clear form after a short delay to show success message
+      setTimeout(() => {
+        setSelectedDesigner('');
+        setSubject('');
+        setMessage('');
+        onClose(); // Close the modal on success
+      }, 2000);
+
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Failed to send request. Please try again.');
+      console.error("Booking failed:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
+  // Don't render anything if the modal is not open
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg relative animate-fade-in-up">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+          <X size={24} />
+        </button>
+        
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">Book a Consultation</h2>
+        
+        {/* Error and Success Messages */}
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-4">{error}</div>}
+        {success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md mb-4">{success}</div>}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="designer" className="block text-sm font-medium text-gray-700 mb-1">Select a Designer</label>
+            <select
+              id="designer"
+              value={selectedDesigner}
+              onChange={(e) => setSelectedDesigner(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              disabled={isLoadingDesigners || isSubmitting}
+            >
+              <option value="">-- Choose a Designer --</option>
+              {isLoadingDesigners ? (
+                <option>Loading designers...</option>
+              ) : (
+                designers.map(designer => (
+                  <option key={designer._id} value={designer._id}>
+                    {designer.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+            <input
+              type="text"
+              id="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., Living Room Design Help"
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Your Message</label>
+            <textarea
+              id="message"
+              rows="4"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Describe your design needs, what you're struggling with, etc."
+              disabled={isSubmitting}
+            ></textarea>
+          </div>
+
+          <div className="flex justify-end gap-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+              disabled={isSubmitting || isLoadingDesigners || !designers.length}
+            >
+              {isSubmitting ? <Loader2 className="animate-spin" /> : <Send size={16} />}
+              Send Request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default ConsultationModal;
