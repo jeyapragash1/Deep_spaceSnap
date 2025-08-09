@@ -4,6 +4,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 const Image = require('../models/Image');
 const authMiddleware = require('../middleware/authMiddleware');
+const aiImageService = require('../utils/aiImageService');
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -281,6 +282,147 @@ router.put('/:name', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error updating image:', error);
     res.status(500).json({ message: 'Error updating image' });
+  }
+});
+
+// === AI IMAGE GENERATION ENDPOINTS ===
+
+// POST /api/images/ai/test - Test AI API connection
+router.post('/ai/test', async (req, res) => {
+  try {
+    console.log('Testing AI image generation API connection');
+    const testResult = await aiImageService.testConnection();
+    
+    if (testResult.success) {
+      res.json({
+        success: true,
+        message: 'AI API connection successful',
+        result: testResult.result
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'AI API connection failed',
+        error: testResult.error,
+        fullError: testResult.fullError
+      });
+    }
+  } catch (error) {
+    console.error('Error testing AI API:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while testing AI API',
+      error: error.message
+    });
+  }
+});
+
+// POST /api/images/ai/generate - Generate images based on style preferences
+router.post('/ai/generate', async (req, res) => {
+  try {
+    const { styleName, styleDescription, geminiRecommendations } = req.body;
+    
+    console.log('Received AI image generation request:', {
+      styleName,
+      styleDescription: styleDescription?.substring(0, 100) + '...',
+      hasRecommendations: !!geminiRecommendations
+    });
+    
+    // Validate required parameters
+    if (!styleName || !styleDescription) {
+      return res.status(400).json({
+        success: false,
+        message: 'Style name and description are required',
+        error: 'Missing required parameters'
+      });
+    }
+    
+    // Generate images using AI service
+    const generatedImages = await aiImageService.generateStyleImages(
+      styleName,
+      styleDescription,
+      geminiRecommendations
+    );
+    
+    console.log('Successfully generated images:', generatedImages.length);
+    
+    res.json({
+      success: true,
+      message: 'Images generated successfully',
+      images: generatedImages,
+      count: generatedImages.length
+    });
+    
+  } catch (error) {
+    console.error('Error generating AI images:', error);
+    
+    // Handle specific error types
+    let statusCode = 500;
+    let errorMessage = 'Failed to generate images';
+    
+    if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+      statusCode = 401;
+      errorMessage = 'AI API authentication failed';
+    } else if (error.message.includes('429')) {
+      statusCode = 429;
+      errorMessage = 'Too many requests to AI API';
+    } else if (error.message.includes('403')) {
+      statusCode = 403;
+      errorMessage = 'AI API access forbidden';
+    }
+    
+    res.status(statusCode).json({
+      success: false,
+      message: errorMessage,
+      error: error.message
+    });
+  }
+});
+
+// GET /api/images/ai/proxy/:url - Proxy image to handle CORS
+router.get('/ai/proxy/*', async (req, res) => {
+  try {
+    const encodedUrl = req.params[0]; // Get the encoded URL after /proxy/
+    const imageUrl = decodeURIComponent(encodedUrl);
+    
+    if (!imageUrl || !imageUrl.startsWith('http')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid image URL'
+      });
+    }
+    
+    console.log('Proxying image request for:', imageUrl);
+    
+    // Fetch the image
+    const fetch = require('node-fetch');
+    const response = await fetch(imageUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Image fetch failed: ${response.status}`);
+    }
+    
+    // Get the image buffer
+    const buffer = await response.buffer();
+    const contentType = response.headers.get('content-type') || 'image/png';
+    
+    // Set appropriate headers
+    res.set({
+      'Content-Type': contentType,
+      'Content-Length': buffer.length,
+      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+      'Access-Control-Allow-Origin': '*'
+    });
+    
+    res.send(buffer);
+    
+  } catch (error) {
+    console.error('Error proxying image:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to proxy image',
+      error: error.message
+    });
   }
 });
 
