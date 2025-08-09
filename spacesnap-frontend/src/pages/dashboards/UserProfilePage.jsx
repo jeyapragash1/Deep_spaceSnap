@@ -3,12 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
-// --- MODIFIED: Use our single configured api instance ---
 import api from '../../api/axiosConfig'; 
-import { Sparkles, Camera, Palette, FolderKanban, MessageSquare, Crown, PlusCircle, ArrowRight, Loader2 } from 'lucide-react';
+import { Sparkles, Camera, Palette, FolderKanban, MessageSquare, Crown, PlusCircle, ArrowRight, Loader2, Info } from 'lucide-react';
 import ConsultationModal from '../../components/dashboard/ConsultationModal';
 
-// Reusable card component for a consistent dashboard look (Unchanged)
+// Reusable card component (Unchanged)
 const DashboardCard = ({ title, children, className, seeAllLink }) => (
   <div className={`bg-white rounded-xl shadow p-6 border ${className}`}>
     <div className="flex justify-between items-center mb-4">
@@ -32,43 +31,94 @@ const ActionCard = ({ to, icon, title, description, colorClass }) => (
     </Link>
 );
 
+// --- NEW: A dedicated component for the consultation status ---
+const ConsultationStatus = ({ consultations }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    if (consultations.length === 0) {
+        return (
+            <>
+                <ConsultationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+                <DashboardCard title="Need Expert Help?">
+                    <p className="text-gray-600 mb-4">Book a virtual consultation with a professional interior designer.</p>
+                    <button 
+                        onClick={() => setIsModalOpen(true)} 
+                        className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
+                        <MessageSquare size={20} /> Book a Designer
+                    </button>
+                </DashboardCard>
+            </>
+        );
+    }
+
+    const mostRecent = consultations[0]; // The list is sorted by date from the API
+    let statusMessage = "Your request is pending.";
+    let statusColor = "bg-yellow-100 text-yellow-800";
+
+    if (mostRecent.status === 'Accepted') {
+        statusMessage = "A designer has accepted your request!";
+        statusColor = "bg-blue-100 text-blue-800";
+    } else if (mostRecent.status === 'Completed') {
+        statusMessage = "Your consultation is complete.";
+        statusColor = "bg-green-100 text-green-800";
+    }
+
+    return (
+         <DashboardCard title="My Consultations">
+            <div className="space-y-4">
+                <div className={`p-3 rounded-lg flex items-center gap-3 ${statusColor}`}>
+                    <Info size={20} />
+                    <p className="text-sm font-semibold">{statusMessage}</p>
+                </div>
+                <p className="text-sm text-gray-600">
+                    Most recent with: <span className="font-bold">{mostRecent.designer.name}</span>
+                </p>
+                <Link to={`/user/consultations/${mostRecent._id}`} className="w-full block text-center bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 transition-colors">
+                    View Conversation
+                </Link>
+                <Link to="/user/consultations" className="text-center text-sm font-semibold text-blue-600 hover:underline block mt-2">
+                    View All ({consultations.length})
+                </Link>
+            </div>
+         </DashboardCard>
+    );
+};
+
+
 const UserProfilePage = () => {
     const { user } = useAuth();
-    // --- State for the new modal ---
-    const [isModalOpen, setIsModalOpen] = useState(false);
     
-    const [stats, setStats] = useState({ designs: 0, consultations: 0 });
+    const [stats, setStats] = useState({ designs: 0 });
+    // --- MODIFIED: Store the full consultation objects, not just the count ---
+    const [consultations, setConsultations] = useState([]); 
     const [recentDesigns, setRecentDesigns] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
-            if (!user) return; // Don't fetch if user is not loaded yet
+            if (!user) return; 
 
             setLoading(true);
             try {
-                // --- MODIFIED: Use the 'api' instance for authenticated requests ---
                 const [designsRes, consultationsRes] = await Promise.all([
                     api.get('/designs/mydesigns'),
                     api.get('/consultations/my-consultations')
                 ]);
                 
-                setStats({
-                    designs: designsRes.data.length,
-                    consultations: consultationsRes.data.length
-                });
+                setStats({ designs: designsRes.data.length });
+                // --- MODIFIED: Store the full array ---
+                setConsultations(consultationsRes.data); 
                 setRecentDesigns(designsRes.data.slice(0, 3));
 
             } catch (err) {
                 console.error("Failed to fetch user dashboard data:", err);
-                // Handle potential auth errors here if needed, e.g., by logging out
             } finally {
                 setLoading(false);
             }
         };
 
         fetchDashboardData();
-    }, [user]); // Re-fetch data if the user object changes
+    }, [user]);
 
     if (loading) {
         return (
@@ -80,17 +130,12 @@ const UserProfilePage = () => {
 
     return (
         <div className="space-y-6">
-            {/* --- ADDED: The Consultation Modal is now part of the page --- */}
-            <ConsultationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-
-            {/* --- TOP ROW: Quick Actions --- */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
                 <ActionCard to="/visualizer" icon={<Sparkles size={32} />} title="AI Visualizer" description="Upload a photo to start" colorClass="bg-blue-500 hover:bg-blue-600" />
                 <ActionCard to={user?.role === 'premium' ? "/ar-preview" : "/upgrade"} icon={<Camera size={32} />} title="AR Preview" description="See furniture in your room" colorClass="bg-purple-500 hover:bg-purple-600" />
                 <ActionCard to="/style-quiz" icon={<Palette size={32} />} title="Find Your Style" description="Take the style quiz" colorClass="bg-green-500 hover:bg-green-600" />
             </div>
 
-            {/* --- UPGRADE BANNER (for registered users) --- */}
             {user?.role === 'registered' && (
                 <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-6 rounded-xl flex items-center justify-between shadow-lg">
                     <div className="flex items-center gap-4">
@@ -106,10 +151,8 @@ const UserProfilePage = () => {
                 </div>
             )}
 
-            {/* --- MAIN CONTENT GRID --- */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* --- Recent Projects Column --- */}
                 <DashboardCard title="Recent Designs" className="lg:col-span-2" seeAllLink="/user/designs">
                     {recentDesigns.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -129,29 +172,22 @@ const UserProfilePage = () => {
                     )}
                 </DashboardCard>
 
-                {/* --- Stats & Booking Column --- */}
                 <div className="space-y-6">
                     <DashboardCard title="Your Stats">
                        <div className="space-y-3">
-                           <div className="flex justify-between items-center text-lg">
+                           <Link to="/user/designs" className="flex justify-between items-center text-lg hover:bg-gray-50 p-2 rounded-md">
                                <span className="flex items-center gap-2 text-gray-600"><FolderKanban size={20} /> Saved Designs</span>
                                <span className="font-bold text-gray-800">{stats.designs}</span>
-                           </div>
-                           <div className="flex justify-between items-center text-lg">
-                               <span className="flex items-center gap-2 text-gray-600"><MessageSquare size={20} /> Consultations</span>
-                               <span className="font-bold text-gray-800">{stats.consultations}</span>
+                           </Link>
+                           <div className="flex justify-between items-center text-lg p-2 rounded-md">
+                               <span className="flex items-center gap-2 text-gray-600"><MessageSquare size={20} /> Total Consultations</span>
+                               <span className="font-bold text-gray-800">{consultations.length}</span>
                            </div>
                        </div>
                     </DashboardCard>
                     
-                    <DashboardCard title="Need Expert Help?">
-                        <p className="text-gray-600 mb-4">Book a virtual consultation with a professional interior designer.</p>
-                        <button 
-                            onClick={() => setIsModalOpen(true)} 
-                            className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
-                            <MessageSquare size={20} /> Book a Designer
-                        </button>
-                    </DashboardCard>
+                    {/* --- THIS IS THE FIX: The new component will show the status or a booking button --- */}
+                    <ConsultationStatus consultations={consultations} />
                 </div>
             </div>
         </div>

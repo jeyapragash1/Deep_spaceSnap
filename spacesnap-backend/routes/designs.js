@@ -3,39 +3,38 @@
 const express = require('express');
 const router = express.Router();
 const Design = require('../models/Design');
-const authMiddleware = require('../middleware/authMiddleware'); // Your working middleware
+const User = require('../models/User'); // Import User model for role checking
+const authMiddleware = require('../middleware/authMiddleware');
 
-// This file handles all requests starting with '/api/designs'
-
-// POST / - Create a new design
-// This route is protected. Only logged-in users can create designs.
+// @route   POST api/designs
+// @desc    Create a new design (for any logged-in user)
+// @access  Private
 router.post('/', authMiddleware, async (req, res) => {
     const { name, designData, thumbnail, originalImage } = req.body;
     
-    // For debugging, let's see what the middleware gives us
-    console.log('User data from token in POST route:', req.user);
-
     try {
         const newDesign = new Design({
             name,
             designData,
             thumbnail,
             originalImage,
-            user: req.user.id, // <-- This 'id' comes directly from the token payload
+            user: req.user.userId, // Using userId from your token payload
         });
 
         const design = await newDesign.save();
-        res.status(201).json(design); // Use 201 for resource creation
+        res.status(201).json(design);
     } catch (err) {
         console.error("Error saving design:", err.message);
         res.status(500).send('Server Error');
     }
 });
 
-// GET /mydesigns - Get all designs for the currently logged-in user
+// @route   GET api/designs/mydesigns
+// @desc    Get all designs for the currently logged-in user
+// @access  Private
 router.get('/mydesigns', authMiddleware, async (req, res) => {
     try {
-        const designs = await Design.find({ user: req.user.id }).sort({ createdAt: -1 });
+        const designs = await Design.find({ user: req.user.userId }).sort({ createdAt: -1 });
         res.json(designs);
     } catch (err) {
         console.error(err.message);
@@ -43,14 +42,16 @@ router.get('/mydesigns', authMiddleware, async (req, res) => {
     }
 });
 
-// GET /:id - Get a specific design by its ID
+// @route   GET api/designs/:id
+// @desc    Get a specific design by its ID
+// @access  Private
 router.get('/:id', authMiddleware, async (req, res) => {
      try {
         const design = await Design.findById(req.params.id);
         if (!design) return res.status(404).json({ msg: 'Design not found' });
         
         // Security check: ensure the user owns this design
-        if (design.user.toString() !== req.user.id) {
+        if (design.user.toString() !== req.user.userId) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -61,13 +62,15 @@ router.get('/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// PUT /:id - Update a specific design
+// @route   PUT api/designs/:id
+// @desc    Update a specific design
+// @access  Private
 router.put('/:id', authMiddleware, async (req, res) => {
     try {
         let design = await Design.findById(req.params.id);
         if (!design) return res.status(404).json({ msg: 'Design not found' });
 
-        if (design.user.toString() !== req.user.id) {
+        if (design.user.toString() !== req.user.userId) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
         
@@ -79,5 +82,30 @@ router.put('/:id', authMiddleware, async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
+
+// ========================================================================
+// --- NEW ROUTE FOR DESIGNER DASHBOARD ---
+// ========================================================================
+// @route   GET api/designs/designer/my-creations
+// @desc    Get all designs created by the logged-in designer
+// @access  Private (Designer Only)
+router.get('/designer/my-creations', authMiddleware, async (req, res) => {
+    try {
+        // First, check if the user making the request is actually a designer
+        const user = await User.findById(req.user.userId);
+        if (!user || user.role !== 'designer') {
+            return res.status(403).json({ msg: 'Access denied. Designer role required.' });
+        }
+
+        // Fetch all designs where the 'user' field matches the designer's ID
+        const designs = await Design.find({ user: req.user.userId }).sort({ createdAt: -1 });
+        res.json(designs);
+    } catch (err) {
+        console.error("Error fetching designer's creations:", err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 
 module.exports = router;

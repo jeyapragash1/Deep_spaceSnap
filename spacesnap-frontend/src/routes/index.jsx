@@ -1,4 +1,5 @@
 // src/routes/index.jsx
+
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -41,8 +42,11 @@ import DesignerApprovals from '../pages/dashboards/admin/DesignerApprovals';
 import MyDesignsPage from '../pages/dashboards/MyDesignsPage';
 import AccountPage from '../pages/dashboards/AccountPage';
 import ConsultationsPage from '../pages/dashboards/ConsultationsPage';
+import ConsultationDetailPage from '../pages/dashboards/ConsultationDetailPage';
 import ContentModeration from '../pages/dashboards/admin/ContentModeration';
 import SystemSettings from '../pages/dashboards/admin/SystemSettings';
+// --- THIS IS THE CORRECTED IMPORT PATH ---
+import DesignersListPage from '../pages/dashboards/DesignersListPage'; 
 
 // --- ROUTING LOGIC COMPONENTS ---
 const ProtectedRouteLogic = () => {
@@ -119,12 +123,15 @@ const AppRoutes = () => {
           <Route path="designs" element={<MyDesignsPage />} />
           <Route path="account" element={<AccountPage />} />
           <Route path="consultations" element={<ConsultationsPage />} />
+          <Route path="consultations/:consultationId" element={<ConsultationDetailPage />} />
+          <Route path="designers" element={<DesignersListPage />} />
         </Route>
 
         {/* === DESIGNER ROUTES === */}
         <Route path="/designer" element={<UserDashboardLayout />}>
           <Route path="dashboard" element={<DesignerDashboardPage />} />
           <Route path="designs" element={<MyDesignsPage />} />
+          <Route path="consultations/:consultationId" element={<ConsultationDetailPage />} />
         </Route>
       </Route>
     </Routes>
