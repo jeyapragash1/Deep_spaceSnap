@@ -1,14 +1,16 @@
 // routes/adminRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Design = require('../models/Design');
-const auth = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // --- Middleware: Admin Only Access ---
 const adminOnly = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.userId); 
+
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ msg: 'Admin access required' });
     }
@@ -18,57 +20,30 @@ const adminOnly = async (req, res, next) => {
   }
 };
 
-// Apply both middlewares to all admin routes
-router.use(auth, adminOnly);
+// Apply both middlewares to all routes defined in this file
+router.use(authMiddleware, adminOnly);
 
-//
+
 // ---------- DASHBOARD OVERVIEW ----------
-//
 router.get('/stats', async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalDesigners = await User.countDocuments({ role: 'designer' });
     const pendingApprovals = await User.countDocuments({ role: 'registered' });
-    const recentUsers = await User.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('name email createdAt');
+    const totalDesigns = await Design.countDocuments(); // Added total designs
     
-    res.json({ totalUsers, totalDesigners, pendingApprovals, recentUsers });
+    res.json({ totalUsers, totalDesigners, pendingApprovals, totalDesigns });
   } catch (err) {
     res.status(500).send('Server Error');
   }
 });
 
-//
+
 // ---------- USER MANAGEMENT ----------
-//
 router.get('/users', async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 }).select('-password');
     res.json(users);
-  } catch (err) {
-    res.status(500).send('Server Error');
-  }
-});
-
-router.post('/users', async (req, res) => {
-  const { name, email, password, role } = req.body;
-  try {
-    let existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ msg: 'User already exists' });
-
-    const newUser = new User({
-      name,
-      email,
-      password,
-      role,
-      authMethod: 'email',
-      isEmailVerified: true,
-    });
-
-    await newUser.save();
-    res.status(201).json(newUser);
   } catch (err) {
     res.status(500).send('Server Error');
   }
@@ -83,9 +58,8 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
-//
+
 // ---------- DESIGNER APPROVAL ----------
-//
 router.get('/pending-designers', async (req, res) => {
   try {
     const pending = await User.find({ role: 'registered' }).select('-password');
@@ -97,16 +71,29 @@ router.get('/pending-designers', async (req, res) => {
 
 router.put('/approve-designer/:id', async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.params.id, { role: 'designer' });
-    res.json({ msg: 'Designer approved' });
+    const user = await User.findByIdAndUpdate(req.params.id, { role: 'designer' }, { new: true });
+    res.json({ msg: 'Designer approved', user });
   } catch (err) {
     res.status(500).send('Server Error');
   }
 });
 
-//
-// ---------- DESIGN MODERATION ----------
-//
+router.delete('/reject-designer/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        await user.deleteOne();
+        res.json({ msg: 'Designer application rejected and user removed' });
+    } catch (err) {
+        console.error('Error rejecting designer:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// ---------- CONTENT (DESIGN) MODERATION ----------
 router.get('/designs', async (req, res) => {
   try {
     const designs = await Design.find()

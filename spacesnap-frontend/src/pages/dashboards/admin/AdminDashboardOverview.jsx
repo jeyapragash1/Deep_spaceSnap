@@ -1,122 +1,89 @@
 // src/pages/dashboards/admin/AdminDashboardOverview.jsx
+
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../api/axiosConfig';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { FaUsers, FaUserTie, FaCheckCircle, FaUserPlus, FaPalette } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
-// --- Register all necessary Chart.js components ---
+// Register all necessary Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
-
 // ===================================================================
-// --- 1. Reusable Sub-Components for a Cleaner Structure ---
+// --- Reusable Sub-Components ---
 // ===================================================================
 
-// A more visually appealing Stat Card
-const StatCard = ({ title, value, icon, bgColor, iconColor }) => (
-    <div className="bg-white p-6 rounded-xl shadow-md flex items-center transform hover:-translate-y-1 transition-all duration-300">
+const StatCard = ({ title, value, icon, bgColor, iconColor, linkTo }) => (
+    <Link to={linkTo} className="block bg-white p-6 rounded-xl shadow border flex items-center transform hover:-translate-y-1 transition-all duration-300">
         <div className={`p-4 rounded-lg mr-4 ${bgColor}`}>
             <div className={`text-2xl ${iconColor}`}>{icon}</div>
         </div>
         <div>
             <p className="text-sm text-gray-500 font-medium">{title}</p>
-            <p className="text-3xl font-bold text-neutral-dark">{value}</p>
+            <p className="text-3xl font-bold text-gray-800">{value}</p>
         </div>
-    </div>
+    </Link>
 );
 
-// A dedicated component for the User Growth Chart
-const UserGrowthChart = () => {
-    const data = {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        datasets: [{
-            label: 'New Users',
-            data: [12, 19, 8, 15, 12, 17], // Slightly more realistic dummy data
-            backgroundColor: 'rgba(13, 148, 136, 0.6)',
-            borderColor: 'rgba(13, 148, 136, 1)',
-            borderWidth: 1,
-            borderRadius: 4,
-        }]
-    };
-    return (
-        <div className="bg-white p-6 rounded-xl shadow-md h-full">
-            <h3 className="font-semibold text-lg mb-4 text-neutral-dark">User Registration Growth</h3>
-            <div className="h-80"><Bar data={data} options={{ maintainAspectRatio: false, plugins: { legend: { display: false } } }} /></div>
-        </div>
-    );
-};
-
-// A dedicated component for the Role Distribution Chart
 const RoleDistributionChart = ({ stats }) => {
+    // Calculate the number of admins. The total number of registered users is now `pendingApprovals`.
+    const adminCount = stats.totalUsers - stats.totalDesigners - stats.pendingApprovals;
+    
     const data = {
         labels: ['Registered Users', 'Designers', 'Admins'],
         datasets: [{
-            data: [stats.totalUsers - stats.totalDesigners - stats.totalAdmins, stats.totalDesigners, stats.totalAdmins],
-            backgroundColor: ['#3B82F6', '#10B981', '#EF4444'], // blue, green, red
+            data: [stats.pendingApprovals, stats.totalDesigners, adminCount > 0 ? adminCount : 0],
+            backgroundColor: ['#FBBF24', '#10B981', '#EF4444'], // yellow, green, red
             borderColor: '#ffffff',
             borderWidth: 4,
         }]
     };
     return (
-        <div className="bg-white p-6 rounded-xl shadow-md">
-            <h3 className="font-semibold text-lg mb-4 text-neutral-dark">User Role Distribution</h3>
+        <div className="bg-white p-6 rounded-xl shadow-md border">
+            <h3 className="font-semibold text-lg mb-4 text-gray-800">User Role Distribution</h3>
             <div className="h-56 flex justify-center"><Doughnut data={data} options={{ maintainAspectRatio: false, cutout: '70%' }}/></div>
         </div>
     );
 };
 
-// A dedicated component for the Recent Activity Feed
-const RecentActivityFeed = ({ users }) => (
-    <div className="bg-white p-6 rounded-xl shadow-md">
-        <h3 className="font-semibold text-lg mb-4 text-neutral-dark">Recent Activity</h3>
+const RecentUsersList = ({ users }) => (
+    <div className="bg-white p-6 rounded-xl shadow-md border">
+        <h3 className="font-semibold text-lg mb-4 text-gray-800">Recently Joined Users</h3>
         <ul className="space-y-4">
-            {users.map(user => (
+            {users.length > 0 ? users.map(user => (
                 <li key={user._id} className="flex items-center gap-4">
                     <div className="p-2 bg-blue-100 rounded-full"><FaUserPlus className="text-blue-500" /></div>
                     <div>
-                        <p className="font-semibold text-sm">{user.name} has registered.</p>
-                        <p className="text-xs text-gray-500">{new Date(user.createdAt).toLocaleString()}</p>
+                        <p className="font-semibold text-sm text-gray-900">{user.name}</p>
+                        <p className="text-xs text-gray-500">{new Date(user.createdAt).toLocaleDateString()}</p>
                     </div>
                 </li>
-            ))}
-            <li className="flex items-center gap-4">
-                <div className="p-2 bg-green-100 rounded-full"><FaPalette className="text-green-500" /></div>
-                <div>
-                    <p className="font-semibold text-sm">A new design template was uploaded.</p>
-                    <p className="text-xs text-gray-500">1 hour ago</p>
-                </div>
-            </li>
+            )) : <p className="text-sm text-gray-500">No recent user activity.</p>}
         </ul>
-        <Link to="/admin/users" className="text-sm font-semibold text-primary-teal hover:underline mt-6 block text-right">View All Users →</Link>
+        <Link to="/admin/users" className="text-sm font-semibold text-blue-600 hover:underline mt-6 block text-right">View All Users →</Link>
     </div>
 );
 
-
 // ===================================================================
-// --- 2. The Main Dashboard Page Component (The "Container") ---
+// --- Main Dashboard Page Component ---
 // ===================================================================
 const AdminDashboardOverview = () => {
-    const [stats, setStats] = useState({ totalUsers: 0, totalDesigners: 0, totalAdmins: 0, pendingApprovals: 0 });
-    const [recentUsers, setRecentUsers] = useState([]);
+    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchDashboardData = async () => {
+            setLoading(true);
             try {
-                const res = await axios.get('http://localhost:5000/api/users');
-                const users = res.data;
-
-                setStats({
-                    totalUsers: users.length,
-                    totalDesigners: users.filter(u => u.role === 'designer').length,
-                    totalAdmins: users.filter(u => u.role === 'admin').length,
-                    pendingApprovals: users.filter(u => u.role === 'registered').length, // Assuming all registered are pending
-                });
-                setRecentUsers(users.slice(-3).reverse()); // Get the last 3 registered users
+                // Use the single, efficient API call
+                const res = await api.get('/admin/stats');
+                setStats(res.data);
             } catch (err) {
                 console.error("Failed to fetch dashboard data:", err);
+                setError('Could not load dashboard data. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -124,27 +91,34 @@ const AdminDashboardOverview = () => {
         fetchDashboardData();
     }, []);
 
-    if (loading) return <div className="flex items-center justify-center h-full"><p>Loading Dashboard...</p></div>;
+    if (loading) {
+        return <div className="flex items-center justify-center h-full"><Loader2 className="animate-spin text-blue-600" size={48} /></div>;
+    }
+    
+    if (error || !stats) {
+        return <div className="text-center text-red-500 p-8">{error || 'An unknown error occurred.'}</div>;
+    }
 
     return (
-        <div>
-            <h1 className="text-3xl font-bold text-neutral-dark mb-6">Admin Overview</h1>
+        <div className="space-y-8">
+            <h1 className="text-3xl font-bold text-gray-800">Admin Overview</h1>
 
-            {/* --- STATISTIC CARDS --- */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <StatCard title="Total Users" value={stats.totalUsers} icon={<FaUsers />} bgColor="bg-blue-100" iconColor="text-blue-600" />
-                <StatCard title="Active Designers" value={stats.totalDesigners} icon={<FaUserTie />} bgColor="bg-green-100" iconColor="text-green-600" />
-                <StatCard title="Pending Approvals" value={stats.pendingApprovals} icon={<FaCheckCircle />} bgColor="bg-yellow-100" iconColor="text-yellow-600" />
+            {/* --- STATISTIC CARDS (with real data and links) --- */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard title="Total Users" value={stats.totalUsers} linkTo="/admin/users" icon={<FaUsers />} bgColor="bg-blue-100" iconColor="text-blue-600" />
+                <StatCard title="Active Designers" value={stats.totalDesigners} linkTo="/admin/users" icon={<FaUserTie />} bgColor="bg-green-100" iconColor="text-green-600" />
+                <StatCard title="Pending Approvals" value={stats.pendingApprovals} linkTo="/admin/approvals" icon={<FaCheckCircle />} bgColor="bg-yellow-100" iconColor="text-yellow-600" />
+                <StatCard title="Total Content" value={stats.totalDesigns} linkTo="/admin/content" icon={<FaPalette />} bgColor="bg-indigo-100" iconColor="text-indigo-600" />
             </div>
 
             {/* --- CHARTS & RECENT ACTIVITY --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                <div className="lg:col-span-3">
-                    <UserGrowthChart />
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
                     <RoleDistributionChart stats={stats} />
-                    <RecentActivityFeed users={recentUsers} />
+                    {/* You can add another chart here, e.g., User Growth */}
+                </div>
+                <div className="lg:col-span-1">
+                    <RecentUsersList users={stats.recentUsers} />
                 </div>
             </div>
         </div>
