@@ -1,3 +1,5 @@
+// spacesnap-backend/utils/aiImageService.js
+
 const fetch = require('node-fetch');
 
 class AIImageService {
@@ -45,6 +47,7 @@ class AIImageService {
       
       const result = await this.generateImage(comprehensivePrompt);
       
+      // FIX: Used backticks (`) for template literals
       const generatedImage = {
         id: 1,
         prompt: comprehensivePrompt,
@@ -71,6 +74,7 @@ class AIImageService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // FIX: Used backticks (`) for the Authorization header
           'Authorization': `Bearer ${this.apiKey}`
         },
         body: JSON.stringify({
@@ -88,6 +92,7 @@ class AIImageService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('LaoZhang API error response:', errorText);
+        // FIX: Used backticks (`) for the Error message
         throw new Error(`LaoZhang API error: ${response.status} - ${errorText}`);
       }
 
@@ -102,19 +107,16 @@ class AIImageService {
       
       let imageUrl = imageContent.trim();
       
-      // Extract URL from markdown format if present
-      const markdownImageMatch = imageContent.match(/!\[.*?\]\((.*?)\)/);
+      const markdownImageMatch = imageContent.match(/!\[.?\]\((.?)\)/);
       if (markdownImageMatch) {
         imageUrl = markdownImageMatch[1].trim();
       }
       
-      // Extract direct URL
       const urlMatch = imageContent.match(/(https?:\/\/[^\s\)]+)/);
       if (urlMatch) {
         imageUrl = urlMatch[1].trim();
       }
       
-      // Clean URL
       imageUrl = imageUrl.replace(/[\)\]"'`]*$/, '');
       
       console.log('Extracted and cleaned image URL:', imageUrl);
@@ -149,6 +151,7 @@ class AIImageService {
     const colorInfo = this.extractColorPalette(textToAnalyze);
     const materialInfo = this.extractMaterials(textToAnalyze);
     
+    // FIX: Used backticks (`) to create the prompt string
     const shortPrompt = `${cleanStyleName} interior design showcase, ${colorInfo}, ${materialInfo}, cohesive style`;
     
     console.log('Generated comprehensive prompt:', shortPrompt);
