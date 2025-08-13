@@ -8,10 +8,9 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, ShieldCheck, Star } from 'lucide-react';
 
-// IMPORTANT: Replace this with your own Stripe Publishable Key from your .env file
+// This will now correctly load your real publishable key from the .env file
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-// --- The Checkout Form Component ---
 const CheckoutForm = () => {
     const stripe = useStripe();
     const elements = useElements();
@@ -23,44 +22,25 @@ const CheckoutForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!stripe || !elements) {
-            // Stripe.js has not yet loaded.
-            return;
-        }
-
+        if (!stripe || !elements) return;
         setIsLoading(true);
 
-        const { error } = await stripe.confirmPayment({
+        const { error, paymentIntent } = await stripe.confirmPayment({
             elements,
-            confirmParams: {
-                // We don't need a return_url as we handle success manually below
-            },
-            redirect: 'if_required' // This prevents the default redirect
+            redirect: 'if_required' 
         });
         
         if (error) {
-            if (error.type === "card_error" || error.type === "validation_error") {
-                setMessage(error.message);
-            } else {
-                setMessage("An unexpected error occurred.");
-            }
+            setMessage(error.type === "card_error" || error.type === "validation_error" ? error.message : "An unexpected error occurred.");
             setIsLoading(false);
-        } else {
-            // Payment was successful! Now, notify our backend to upgrade the user.
+        } else if (paymentIntent && paymentIntent.status === 'succeeded') {
             try {
                 const res = await api.post('/payments/success');
-                // Update the global user state with the new 'premium' role
                 updateUserState(res.data.user);
-                setMessage("Payment successful! Redirecting to your dashboard...");
-                
-                // Redirect to the dashboard after a short delay
-                setTimeout(() => {
-                    navigate('/user/profile');
-                }, 2000);
-
+                setMessage("Payment successful! Redirecting...");
+                setTimeout(() => navigate('/user/profile'), 2000);
             } catch (backendError) {
-                setMessage("Payment was successful, but we failed to upgrade your account. Please contact support.");
+                setMessage("Payment succeeded, but failed to upgrade your account. Please contact support.");
                 setIsLoading(false);
             }
         }
@@ -70,29 +50,25 @@ const CheckoutForm = () => {
         <form id="payment-form" onSubmit={handleSubmit}>
             <PaymentElement id="payment-element" />
             <button disabled={isLoading || !stripe || !elements} id="submit" className="w-full mt-6 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:bg-gray-400">
-                <span id="button-text">
-                    {isLoading ? <Loader2 className="animate-spin" /> : "Pay Now ($10.00)"}
-                </span>
+                {isLoading ? <Loader2 className="animate-spin" /> : "Pay Now ($10.00)"}
             </button>
-            {message && <div id="payment-message" className="mt-4 text-center text-red-500">{message}</div>}
+            {message && <div className="mt-4 text-center text-sm font-medium text-red-600">{message}</div>}
         </form>
     );
 };
 
-
-// --- The Main Upgrade Page Component ---
 const UpgradePage = () => {
     const [clientSecret, setClientSecret] = useState("");
+    const [error, setError] = useState("");
 
     useEffect(() => {
-        // Create PaymentIntent as soon as the page loads
         const createPaymentIntent = async () => {
             try {
                 const res = await api.post("/payments/create-payment-intent");
                 setClientSecret(res.data.clientSecret);
-            } catch (error) {
-                console.error("Failed to create payment intent:", error);
-                // You could show an error message to the user here
+            } catch (err) {
+                console.error("Failed to create payment intent:", err);
+                setError("Could not load the payment form. Please refresh the page.");
             }
         };
         createPaymentIntent();
@@ -116,13 +92,16 @@ const UpgradePage = () => {
                 </ul>
 
                 <div className="bg-white p-8 rounded-xl shadow-xl border">
-                    {clientSecret ? (
+                    {error ? (
+                        <div className="text-center text-red-600 font-medium">{error}</div>
+                    ) : clientSecret ? (
                         <Elements options={options} stripe={stripePromise}>
                             <CheckoutForm />
                         </Elements>
                     ) : (
-                        <div className="flex justify-center items-center h-48">
+                        <div className="flex flex-col justify-center items-center h-48">
                             <Loader2 className="animate-spin text-blue-600" size={48} />
+                            <p className="mt-4 text-gray-600">Initializing secure payment...</p>
                         </div>
                     )}
                 </div>
