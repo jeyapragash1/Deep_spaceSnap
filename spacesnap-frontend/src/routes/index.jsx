@@ -41,7 +41,8 @@ import ContentModeration from '../pages/dashboards/admin/ContentModeration';
 import SystemSettings from '../pages/dashboards/admin/SystemSettings';
 import EmailTemplatesPage from '../pages/dashboards/admin/EmailTemplatesPage';
 import FeatureFlagsPage from '../pages/dashboards/admin/FeatureFlagsPage';
-import PortfolioManagement from '../pages/dashboards/admin/PortfolioManagement'; // --- IMPORT NEW ADMIN PAGE ---
+import PortfolioManagement from '../pages/dashboards/admin/PortfolioManagement'; 
+import PaymentSettingsPage from '../pages/dashboards/admin/PaymentSettingsPage';
 
 import UserProfilePage from '../pages/dashboards/UserProfilePage';
 import MyDesignsPage from '../pages/dashboards/MyDesignsPage';
@@ -124,7 +125,8 @@ const AppRoutes = () => {
           <Route path="settings" element={<SystemSettings />} />
           <Route path="email-templates" element={<EmailTemplatesPage />} /> 
           <Route path="feature-flags" element={<FeatureFlagsPage />} />
-          <Route path="portfolio" element={<PortfolioManagement />} /> {/* --- ADD NEW ADMIN ROUTE --- */}
+          <Route path="portfolio" element={<PortfolioManagement />} /> 
+          <Route path="payment-settings" element={<PaymentSettingsPage />} />
         </Route>
 
         {/* === USER ROUTES === */}

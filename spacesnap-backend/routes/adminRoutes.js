@@ -11,6 +11,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 // --- Middleware: Admin Only Access ---
 const adminOnly = async (req, res, next) => {
   try {
+    // This assumes your authMiddleware attaches a user object with a `userId` property.
     const user = await User.findById(req.user.userId); 
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ msg: 'Admin access required' });
@@ -152,11 +153,19 @@ router.put('/email-templates/:id', async (req, res) => {
 // ---------- SYSTEM SETTINGS & FEATURE FLAGS ----------
 router.get('/settings', async (req, res) => {
     try {
-        let settings = await Setting.findOne({ key: 'main-settings' });
+        let settings = await Setting.findOne({ key: 'main-settings' }).lean(); // Use .lean() for a plain object
         if (!settings) {
-            settings = new Setting();
-            await settings.save();
+            const newSettings = new Setting();
+            await newSettings.save();
+            settings = newSettings.toObject();
         }
+        
+        // --- THIS IS THE MODIFICATION ---
+        // Securely remove the secret key before sending settings to the frontend
+        if (settings.paymentGateway) {
+            delete settings.paymentGateway.stripeSecretKey;
+        }
+        
         res.json(settings);
     } catch (err) {
         console.error('Error fetching settings:', err.message);
@@ -175,6 +184,37 @@ router.put('/settings', async (req, res) => {
         res.json(updatedSettings);
     } catch (err) {
         console.error('Error updating settings:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// --- THIS IS THE NEW CODE ADDED TO YOUR FILE ---
+// ---------- PAYMENT GATEWAY SETTINGS ----------
+router.put('/payment-settings', async (req, res) => {
+    const { stripeEnabled, stripePublishableKey, stripeSecretKey } = req.body;
+
+    try {
+        // Construct the update object carefully
+        const updatePayload = {
+            'paymentGateway.stripeEnabled': stripeEnabled,
+            'paymentGateway.stripePublishableKey': stripePublishableKey,
+        };
+        
+        // Only update the secret key if a new one was actually provided
+        if (stripeSecretKey && stripeSecretKey !== '••••••••••••••••••••') {
+            updatePayload['paymentGateway.stripeSecretKey'] = stripeSecretKey;
+        }
+
+        await Setting.findOneAndUpdate(
+            { key: 'main-settings' },
+            { $set: updatePayload },
+            { new: true, upsert: true }
+        );
+        
+        res.json({ msg: 'Payment settings updated successfully!' });
+    } catch (err) {
+        console.error('Error updating payment settings:', err.message);
         res.status(500).send('Server Error');
     }
 });
