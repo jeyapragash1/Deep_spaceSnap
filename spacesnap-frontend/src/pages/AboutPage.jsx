@@ -76,7 +76,7 @@ const AboutPage = () => {
               }, {
                 icon: <FaUsers />,
                 title: "The Team",
-                text: "Group No: 10, a passionate team of Industrial Information Technology students from Uva Wellassa University, came together to build the solution."
+                text: "A passionate team of Industrial Information Technology students from Uva Wellassa University, came together to build the solution."
               }, {
                 icon: <FaFlagCheckered />,
                 title: "The Launch",

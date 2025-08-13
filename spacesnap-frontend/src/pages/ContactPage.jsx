@@ -74,7 +74,7 @@ const ContactPage = () => {
                 <div>
                   <h3 className="text-xl font-semibold">Office</h3>
                   <p className="text-gray-600">Find us here.</p>
-                  <p className="font-medium text-neutral-dark">Uva Wellassa University, Sri Lanka</p>
+                  <p className="font-medium text-neutral-dark">Clombo 02, Sri Lanka</p>
                 </div>
               </div>
             </motion.div>
