@@ -9,8 +9,6 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import MainLayout from '../components/layout/MainLayout';
 import AdminDashboardLayout from '../components/layout/AdminDashboardLayout';
 import UserDashboardLayout from '../components/layout/UserDashboardLayout';
-import EmailTemplatesPage from '../pages/dashboards/admin/EmailTemplatesPage'; // <-- IMPORT
-import FeatureFlagsPage from '../pages/dashboards/admin/FeatureFlagsPage'; // <-- IMPORT
 
 // --- PUBLIC PAGES ---
 import LandingPage from '../pages/LandingPage';
@@ -19,8 +17,7 @@ import ContactPage from '../pages/ContactPage';
 import PortfolioPage from '../pages/PortfolioPage';
 import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
 import TermsOfServicePage from '../pages/TermsOfServicePage';
-import DesignerAnalyticsPage from '../pages/dashboards/DesignerAnalyticsPage'; 
-import DesignerProfilePage from '../pages/dashboards/DesignerProfilePage';
+
 // --- AUTH PAGES ---
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
@@ -39,18 +36,24 @@ import UpgradePage from '../pages/UpgradePage';
 // --- DASHBOARD PAGES ---
 import AdminDashboardOverview from '../pages/dashboards/admin/AdminDashboardOverview';
 import UserManagement from '../pages/dashboards/admin/UserManagement';
-import DesignerDashboardPage from '../pages/dashboards/DesignerDashboardPage';
-import UserProfilePage from '../pages/dashboards/UserProfilePage';
 import DesignerApprovals from '../pages/dashboards/admin/DesignerApprovals';
+import ContentModeration from '../pages/dashboards/admin/ContentModeration';
+import SystemSettings from '../pages/dashboards/admin/SystemSettings';
+import EmailTemplatesPage from '../pages/dashboards/admin/EmailTemplatesPage';
+import FeatureFlagsPage from '../pages/dashboards/admin/FeatureFlagsPage';
+import PortfolioManagement from '../pages/dashboards/admin/PortfolioManagement'; // --- IMPORT NEW ADMIN PAGE ---
+
+import UserProfilePage from '../pages/dashboards/UserProfilePage';
 import MyDesignsPage from '../pages/dashboards/MyDesignsPage';
 import AccountPage from '../pages/dashboards/AccountPage';
 import ConsultationsPage from '../pages/dashboards/ConsultationsPage';
 import ConsultationDetailPage from '../pages/dashboards/ConsultationDetailPage';
-import ContentModeration from '../pages/dashboards/admin/ContentModeration';
-import SystemSettings from '../pages/dashboards/admin/SystemSettings';
 import DesignersListPage from '../pages/dashboards/DesignersListPage'; 
-// --- IMPORT THE NEW PAGE ---
+
+import DesignerDashboardPage from '../pages/dashboards/DesignerDashboardPage';
 import MyContentPage from '../pages/dashboards/MyContentPage';
+import DesignerAnalyticsPage from '../pages/dashboards/DesignerAnalyticsPage'; 
+import DesignerProfilePage from '../pages/dashboards/DesignerProfilePage'; 
 
 // --- ROUTING LOGIC COMPONENTS ---
 const ProtectedRouteLogic = () => {
@@ -120,7 +123,8 @@ const AppRoutes = () => {
           <Route path="content" element={<ContentModeration />} />
           <Route path="settings" element={<SystemSettings />} />
           <Route path="email-templates" element={<EmailTemplatesPage />} /> 
-          <Route path="feature-flags" element={<FeatureFlagsPage />} /> 
+          <Route path="feature-flags" element={<FeatureFlagsPage />} />
+          <Route path="portfolio" element={<PortfolioManagement />} /> {/* --- ADD NEW ADMIN ROUTE --- */}
         </Route>
 
         {/* === USER ROUTES === */}
@@ -136,7 +140,6 @@ const AppRoutes = () => {
         {/* === DESIGNER ROUTES === */}
         <Route path="/designer" element={<UserDashboardLayout />}>
           <Route path="dashboard" element={<DesignerDashboardPage />} />
-          {/* --- ADD THE NEW ROUTE FOR THE DESIGNER'S CONTENT PAGE --- */}
           <Route path="content" element={<MyContentPage />} />
           <Route path="analytics" element={<DesignerAnalyticsPage />} /> 
           <Route path="profile" element={<DesignerProfilePage />} /> 
