@@ -1,239 +1,151 @@
 // src/pages/ArPreviewPage.jsx
 
-import React, { Suspense, useState, useEffect, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { ARButton, XR, Controllers, Hands, useHitTest } from '@react-three/xr';
-import { useGLTF, OrbitControls } from '@react-three/drei';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaCube, FaQrcode, FaTimes, FaVideo, FaSave } from 'react-icons/fa';
-import { QRCodeCanvas } from 'qrcode.react';
-import * as THREE from 'three';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { FaCube, FaCamera, FaCheckCircle, FaMagic, FaSpinner } from 'react-icons/fa';
+import { motion } from 'framer-motion';
 
-// ===============================================
-// --- Data and Components ---
-// ===============================================
+// --- CameraCapture Component ---
+const CameraCapture = ({ onComplete }) => {
+    const videoRef = useRef(null); const canvasRef = useRef(null);
+    useEffect(() => {
+        let stream; let captureTimer; let sessionTimer;
+        const capturedImages = [];
+        async function setupCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                if (videoRef.current) { videoRef.current.srcObject = stream; }
+                captureTimer = setInterval(captureImage, 2000);
+                sessionTimer = setTimeout(stopCamera, 10000);
+            } catch (err) { console.error(err); alert("Could not access the camera."); onComplete([]); }
+        }
+        const captureImage = () => { if (videoRef.current && canvasRef.current) { const v = videoRef.current; const c = canvasRef.current; c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); capturedImages.push(c.toDataURL('image/jpeg')); console.log(`Captured image ${capturedImages.length}`); } };
+        const stopCamera = () => { if (stream) { stream.getTracks().forEach(t => t.stop()); } clearInterval(captureTimer); clearTimeout(sessionTimer); onComplete(capturedImages); };
+        setupCamera();
+        return () => { if (stream) { stream.getTracks().forEach(t => t.stop()); } clearInterval(captureTimer); clearTimeout(sessionTimer); };
+    }, [onComplete]);
+    return ( <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'black' }}> <video ref={videoRef} autoPlay playsInline style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}></video> <canvas ref={canvasRef} style={{ display: 'none' }}></canvas> <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 2 }} className="bg-black bg-opacity-60 text-white p-6 rounded-lg text-center pointer-events-none"> <FaCamera className="text-4xl mx-auto mb-3" /> <h3 className="text-xl font-bold">Scanning Room...</h3> <p>Move your phone slowly.</p></div> </div> );
+};
 
-// --- CORRECTED: This library now matches YOUR files and uses internet images ---
-const furnitureLibrary = [
-  {
-    id: 'sofa_modern',
-    name: 'Modern Sofa',
-    modelPath: '/models/sofa.glb',
-    scale: 0.2,
-    thumbnail: 'https://placehold.co/128x128/a3bffa/ffffff?text=Sofa'
-  },
-  {
-    id: 'red_chair',
-    name: 'Red Armchair',
-    modelPath: '/models/red_chair.glb',
-    scale: 0.25,
-    thumbnail: 'https://placehold.co/128x128/ff7a7a/ffffff?text=Chair'
-  },
-  {
-    id: 'sofa_set',
-    name: 'Sofa & Table Set',
-    modelPath: '/models/sofa_and_table.glb',
-    scale: 0.2,
-    thumbnail: 'https://placehold.co/128x128/7af2ff/ffffff?text=Set'
-  },
-  {
-    id: 'canape_sofa',
-    name: 'Canape Sofa',
-    modelPath: '/models/canape.gltf', // .gltf is also supported
-    scale: 0.15,
-    thumbnail: 'https://placehold.co/128x128/b17aff/ffffff?text=Canape'
-  },
-  {
-    id: 'classic_sofa',
-    name: 'Classic Sofa',
-    modelPath: '/models/sofa%20(1).glb', // The space is encoded as %20 for URL safety
-    scale: 0.2,
-    thumbnail: 'https://placehold.co/128x128/ffcd7a/ffffff?text=Sofa+2'
-  }
-];
+// --- THIS IS THE FINAL COMPONENT WITH THE DATA FORMAT FIX ---
+const FinalStepComponent = ({ selectedImage }) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [resultImage, setResultImage] = useState(null);
+    const [error, setError] = useState('');
 
-function Model({ modelPath, ...props }) {
-  const { scene } = useGLTF(modelPath);
-  return <primitive object={scene.clone()} {...props} />;
-}
+    const handleGenerate = async () => {
+        setIsLoading(true); setError(''); setResultImage(null);
+        const apiKey = import.meta.env.VITE_SEGMIND_API_KEY;
+        if (!apiKey) { setError("Segmind API key is not configured in .env file."); setIsLoading(false); return; }
 
-function HitTestMarker() {
-  const reticleRef = useRef();
-  useHitTest((hitMatrix, hit) => {
-    if (hit) {
-      hitMatrix.decompose(reticleRef.current.position, reticleRef.current.quaternion, reticleRef.current.scale);
-      reticleRef.current.visible = true;
-    } else {
-      reticleRef.current.visible = false;
-    }
-  });
-  return (
-    <mesh ref={reticleRef} visible={false}>
-      <ringGeometry args={[0.05, 0.1, 32]} />
-      <meshBasicMaterial color="white" />
-    </mesh>
-  );
-}
+        try {
+            // --- THIS IS THE CRITICAL FIX ---
+            const base64Image = selectedImage.split(',')[1];
+            // --- END OF FIX ---
 
-const DemoVideoModal = ({ onClose }) => (
-    <AnimatePresence>
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-            onClick={onClose}
-        >
-            <motion.div
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                className="bg-white rounded-lg shadow-2xl w-full max-w-3xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="p-4 flex justify-between items-center border-b">
-                    <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2"><FaVideo /> Feature Demo</h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-900"><FaTimes size={20} /></button>
+            const response = await fetch('https://api.segmind.com/v1/sd1.5-img2img', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey
+                },
+                body: JSON.stringify({
+                    "image": base64Image, // Send just the base64 part
+                    "prompt": "photorealistic, a beautiful and aesthetic new version of this scene, high quality, 8k",
+                    "negative_prompt": "ugly, tiling, poorly drawn, disfigured, deformed, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft",
+                    "scheduler": "DDIM",
+                    "num_inference_steps": 25,
+                    "guidance_scale": 7.5,
+                    "strength": 0.75, // How much to change the original image (0.1 to 1.0)
+                    "seed": Math.floor(Math.random() * 1000000000)
+                }),
+            });
+
+            if (response.ok) {
+                const imageBlob = await response.blob();
+                const imageUrl = URL.createObjectURL(imageBlob);
+                setResultImage(imageUrl);
+            } else {
+                const errorData = await response.json();
+                setError(`API Error: ${errorData.detail || 'Something went wrong.'}`);
+            }
+        } catch (e) {
+            setError(`Network Error: ${e.message}`);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (resultImage) {
+        return (
+            <div className="w-full min-h-screen bg-gray-900 p-4 text-white text-center flex flex-col items-center justify-center">
+                <h1 className="text-4xl font-bold mb-6">Generation Complete!</h1>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
+                    <div><h2 className="text-2xl font-semibold mb-3">Before</h2><img src={selectedImage} alt="Original" className="rounded-lg shadow-lg" /></div>
+                    <div><h2 className="text-2xl font-semibold mb-3">AI Reimagined Version</h2><img src={resultImage} alt="Generated" className="rounded-lg shadow-lg" /></div>
                 </div>
-                <video src="/hero-video.mp4" controls autoPlay muted loop className="w-full"></video>
-            </motion.div>
-        </motion.div>
-    </AnimatePresence>
-);
-
-const DesktopPreview = ({ item }) => {
-    const { id, name, thumbnail, ...modelProps } = item;
+                <button onClick={() => { setResultImage(null); setIsLoading(false); }} className="mt-8 bg-blue-600 font-bold py-3 px-8 rounded-lg">Try Another Photo</button>
+            </div>
+        );
+    }
+    
     return (
-        <Canvas camera={{ position: [0, 1.5, 4], fov: 50 }}>
-            <ambientLight intensity={1.5} />
-            <directionalLight position={[5, 5, 5]} intensity={1} />
-            <OrbitControls autoRotate autoRotateSpeed={1} />
-            <Suspense fallback={null}>
-                <Model {...modelProps} />
-            </Suspense>
-        </Canvas>
+        <div className="w-full min-h-screen bg-gray-800 p-4 flex flex-col items-center justify-center">
+            <div className="text-center text-white mb-6 max-w-lg">
+                <h1 className="text-3xl font-bold">Step 3: Reimagine Your Photo</h1>
+                <p className="mt-2">The AI will create a new version of your photo.</p>
+            </div>
+            <img src={selectedImage} alt="Selected" className="max-w-md rounded-lg shadow-xl mb-8" />
+            <button onClick={handleGenerate} disabled={isLoading} className="bg-green-500 text-white font-bold py-4 px-6 rounded-lg text-xl flex items-center justify-center gap-2 disabled:bg-gray-400">
+                {isLoading ? <FaSpinner className="animate-spin" /> : <FaMagic />}
+                {isLoading ? 'Generating...' : 'Reimagine with AI'}
+            </button>
+            {error && <p className="text-red-400 text-center mt-4">{error}</p>}
+        </div>
     );
 };
 
 // ===============================================
 // --- Main Page Component ---
 // ===============================================
-
 const ArPreviewPage = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  const [showDemo, setShowDemo] = useState(true);
-  const [placedObjects, setPlacedObjects] = useState([]);
-  const [selectedObject, setSelectedObject] = useState(furnitureLibrary[0]);
-  const hitTestTargetRef = useRef(); 
+    const [step, setStep] = useState('start');
+    const [scannedImages, setScannedImages] = useState([]);
+    const [selectedImage, setSelectedImage] = useState(null);
 
-  useEffect(() => {
-    const userAgent = typeof window.navigator === "undefined" ? "" : navigator.userAgent;
-    const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-    setIsMobile(mobileRegex.test(userAgent));
-  }, []);
+    const handleScanComplete = useCallback((images) => { setTimeout(() => { if (images && images.length > 0) { setScannedImages(images); setStep('select_photo'); } else { setStep('start'); } }, 0); }, []);
+    const handlePhotoSelection = (imageSrc) => { setSelectedImage(imageSrc); setStep('final_step'); };
 
-  const handlePlaceObject = () => {
-      if (hitTestTargetRef.current) {
-          const position = new THREE.Vector3();
-          position.setFromMatrixPosition(hitTestTargetRef.current.matrix);
-          setPlacedObjects(prev => [...prev, { appId: Date.now(), ...selectedObject, position: [position.x, position.y, position.z] }]);
-      }
-  };
-
-  const handleSaveScene = async () => {
-    if (placedObjects.length === 0) {
-        alert("Your scene is empty!");
-        return;
-    }
-    alert(`Scene saved with ${placedObjects.length} objects!`);
-    console.log("Saving scene:", JSON.stringify(placedObjects, null, 2));
-  };
-  
-  const HitTestAndPlace = () => {
-    hitTestTargetRef.current = new THREE.Object3D();
-    useHitTest((hitMatrix) => {
-      if (hitTestTargetRef.current) {
-        hitTestTargetRef.current.matrix.copy(hitMatrix);
-      }
-    });
-    return null;
-  };
-
-  return (
-    <>
-      {showDemo && <DemoVideoModal onClose={() => setShowDemo(false)} />}
-      
-      <div className="bg-white min-h-screen">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center mb-12">
-            <FaCube className="text-blue-600 text-6xl mx-auto mb-4" />
-            <h1 className="text-4xl md:text-6xl font-extrabold text-gray-800 mb-4">Augmented Reality Preview</h1>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">See our 3D models in your own space.</p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="w-full h-[600px] bg-gray-100 rounded-lg shadow-inner relative" onClick={isMobile ? handlePlaceObject : undefined}>
-              {isMobile ? (
-                <Canvas>
-                  <XR>
-                    <ambientLight intensity={1.5} />
-                    {placedObjects.map((obj) => (
-                      <Model key={obj.appId} modelPath={obj.modelPath} position={obj.position} scale={obj.scale} />
-                    ))}
-                    <HitTestMarker />
-                    <HitTestAndPlace />
-                  </XR>
-                </Canvas>
-              ) : (
-                <>
-                  <DesktopPreview item={selectedObject} />
-                  <div className="absolute inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center text-white p-4 text-center rounded-lg">
-                    <FaQrcode className="text-6xl mb-4" />
-                    <h3 className="text-2xl font-bold">Open on Your Phone to Use AR</h3>
-                    <p className="mt-2 mb-4">Scan the QR code to experience this in your room.</p>
-                    <div className="bg-white p-2 rounded-md">
-                      <QRCodeCanvas value={window.location.href} size={128} />
+    switch (step) {
+        case 'scanning': return <CameraCapture onComplete={handleScanComplete} />;
+        case 'select_photo': return (
+            <div className="w-full min-h-screen bg-gray-100 p-4 sm:p-8">
+                <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-8"><FaCheckCircle className="text-green-500 text-5xl mx-auto mb-3" /><h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800">Scan Complete!</h1><p className="text-lg text-gray-600 mt-2">Now, select the best photo to reimagine.</p></div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {scannedImages.map((imgSrc, index) => (
+                            <motion.div key={index} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.1 }} onClick={() => handlePhotoSelection(imgSrc)} className="cursor-pointer rounded-lg overflow-hidden shadow-lg transform hover:scale-105 transition-transform duration-300">
+                                <img src={imgSrc} alt={`Scanned view ${index + 1}`} className="w-full h-full object-cover" />
+                            </motion.div>
+                        ))}
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="p-6">
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">1. Select an Item</h2>
-              <div className="flex space-x-3 overflow-x-auto pb-4">
-                {furnitureLibrary.map(item => (
-                  <button key={item.id} onClick={() => setSelectedObject(item)} className={`p-4 rounded-lg border-2 transition-all duration-200 shrink-0 ${selectedObject.id === item.id ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-400'}`}>
-                    {/* CORRECTED: This now uses the internet URL from the library */}
-                    <img src={item.thumbnail} alt={item.name} className="w-16 h-16 object-contain mx-auto" />
-                    <p className="text-center font-semibold mt-2 text-sm text-gray-700">{item.name}</p>
-                  </button>
-                ))}
-              </div>
-
-              <h2 className="text-3xl font-bold text-gray-800 mb-4 mt-8">2. Place in Your Room</h2>
-              <p className="text-gray-600 mb-6">{isMobile ? "Tap the 'Start AR' button, scan the floor, then tap the screen to place the selected item." : "Open this page on your phone to get started."}</p>
-              
-              {isMobile && (
-                <div className="space-y-4">
-                    <ARButton 
-                        sessionInit={{ requiredFeatures: ["hit-test"] }} 
-                        className="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition"
-                    />
-                    <button
-                      onClick={handleSaveScene}
-                      disabled={placedObjects.length === 0}
-                      className="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      <FaSave /> Save Scene
-                    </button>
                 </div>
-              )}
             </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
+        );
+        case 'final_step': return <FinalStepComponent selectedImage={selectedImage} />;
+        case 'start':
+        default:
+            return (
+                <div className="relative w-full h-screen bg-gray-800 text-white overflow-hidden">
+                    <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1586023492125-27b2d045efd7?ixlib.rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG9otby1wYWdlfHx8fGVufDB8fHx8&auto.format&fit-crop&w=1974&q=80')" }} />
+                    <div className="relative z-10 flex flex-col items-center justify-center h-full text-center p-8">
+                        <FaCube className="text-blue-400 text-7xl mb-6" /><h1 className="text-5xl md:text-7xl font-extrabold mb-4">Redesign Your Room</h1><p className="text-xl text-gray-300 max-w-2xl mb-10">Follow a few simple steps to scan your room and replace furniture using AI.</p>
+                        <button onClick={() => setStep('scanning')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg py-4 px-10 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300">
+                            Step 1: Scan Your Room
+                        </button>
+                    </div>
+                </div>
+            );
+    }
 };
 
 export default ArPreviewPage;
