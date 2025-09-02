@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "server": "nodemon server.js",
     "seed:import": "node utils/seeder.js",
     "seed:destroy": "node utils/seeder.js -d"
   },
@@ -12,6 +13,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.21.1",
+    "@gradio/client": "^1.17.1",
+    "axios": "^1.11.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
@@ -19,12 +23,15 @@
     "express": "^4.19.2",
     "express-rate-limit": "^8.0.1",
     "express-validator": "^7.2.1",
+    "form-data": "^4.0.4",
     "google-auth-library": "^10.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.3.2",
     "multer": "^2.0.2",
     "node-fetch": "^2.7.0",
     "nodemailer": "^7.0.4",
+    "nodemon": "^3.1.10",
+    "openai": "^5.16.0",
     "sharp": "^0.34.3",
     "stripe": "^18.4.0",
     "uuid": "^11.1.0"
