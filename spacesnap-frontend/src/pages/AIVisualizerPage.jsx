@@ -87,8 +87,28 @@ const AiVisualizerPage = () => {
   // prefer generated image when available
   const baseImage = outPutImage || imagePreview;
 
+  const imgRef = useRef(null);
   const canvasRef = useRef(null);
+  const [imgBox, setImgBox] = useState(null);
+  const [afterPreviewUrl, setAfterPreviewUrl] = useState(null);
   const [showTools, setShowTools] = useState(false);
+
+  const measureImg = useCallback(() => {
+    if (!imgRef.current || !canvasRef.current) return;
+    const imgRect = imgRef.current.getBoundingClientRect();
+    const cRect = canvasRef.current.getBoundingClientRect();
+    setImgBox({
+      left: imgRect.left - cRect.left,
+      top: imgRect.top - cRect.top,
+      width: imgRect.width,
+      height: imgRect.height,
+    });
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("resize", measureImg);
+    return () => window.removeEventListener("resize", measureImg);
+  }, [measureImg]);
 
   // load existing design (if editing)
   useEffect(() => {
@@ -124,7 +144,33 @@ const AiVisualizerPage = () => {
     run();
   }, [designId, navigate]);
 
-  // save updated canvas (generated if present)
+  // snapshot "after" when only overlays exist (kept for compatibility)
+  useEffect(() => {
+    const snap = async () => {
+      if (!isVisualized || outPutImage || !canvasRef.current) return;
+      await new Promise((r) => setTimeout(r, 100));
+      const canvas = await html2canvas(canvasRef.current, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: 1.5,
+      });
+      setAfterPreviewUrl(canvas.toDataURL("image/jpeg", 0.92));
+    };
+    snap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isVisualized,
+    outPutImage,
+    selectedWallColor,
+    selectedCeilingColor,
+    selectedFloorPattern,
+    masks?.wallMaskUrl,
+    masks?.floorMaskUrl,
+    masks?.ceilingMaskUrl,
+    placedObjects,
+  ]);
+
+  // save design
   const handleSaveDesign = async () => {
     if (!outPutImage) return alert("Please generate before saving.");
     if (!designName.trim()) return alert("Give your design a name.");
@@ -146,8 +192,8 @@ const AiVisualizerPage = () => {
       const payload = {
         name: designName,
         designData: JSON.stringify(designDataToSave),
-        thumbnail: thumbnailDataUrl, // updated
-        originalImage: imagePreview, // keep original ref
+        thumbnail: thumbnailDataUrl,
+        originalImage: imagePreview,
       };
 
       if (designId) {
@@ -167,12 +213,10 @@ const AiVisualizerPage = () => {
   };
 
   // upload
-  // REPLACE your handleImageUpload with this:
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // convert to data URL so /api/segment can receive it directly
     const toDataUrl = (f) =>
       new Promise((resolve, reject) => {
         const r = new FileReader();
@@ -187,32 +231,44 @@ const AiVisualizerPage = () => {
     setOutPutImage(null);
     setIsVisualized(false);
     setMasks({});
+    setAfterPreviewUrl(null);
     setCanGenerate(prompt.trim().length > 0);
   };
 
-  // analyze (segment current image)
+  // analyze (now returns a single styled image from backend)
+  // Make sure at top:
+  // import aiVisualizerService from "../services/aiVisualizerService";
+  // (and that aiVisualizerService.segmentRoomMultipart exists)
+
   const handleVisualizeClick = async () => {
-    if (!baseImage) return;
+    const baseImageLocal = outPutImage || imagePreview;
+    if (!baseImageLocal) return;
 
     setIsProcessing(true);
     setAnalyzeStatus("Preparing image…");
-    setMasks({}); // clear previous masks to avoid visual flicker
+    setMasks({});
+    setSelectedObjectId(null);
 
     try {
-      setAnalyzeStatus("Analyzing scene (AI)...");
-      const seg = await aiVisualizerService.segmentRoom(baseImage);
+      setAnalyzeStatus("Analyzing scene (AI)…");
+      const seg = await aiVisualizerService.segmentRoom(baseImageLocal);
 
-      setAnalyzeStatus("Applying masks…");
-      setMasks(seg || {});
+      setAnalyzeStatus("Applying result…");
+      if (seg?.resultImageUrl) setOutPutImage(seg.resultImageUrl);
+
+      setMasks({
+        wallMaskUrl: seg?.wallMaskUrl ?? null,
+        floorMaskUrl: seg?.floorMaskUrl ?? null,
+        ceilingMaskUrl: seg?.ceilingMaskUrl ?? null,
+      });
+
       setIsVisualized(true);
-
-      // optional: bring focus to styling tools after first analysis
       setShowTools(true);
 
       setAnalyzeStatus("Done");
-      // fade the status after a moment
       setTimeout(() => setAnalyzeStatus(""), 900);
-    } catch {
+    } catch (err) {
+      console.error("Analyze error:", err);
       setAnalyzeStatus("");
       alert("AI segmentation failed.");
     } finally {
@@ -220,7 +276,7 @@ const AiVisualizerPage = () => {
     }
   };
 
-  // generate (prompt untouched)
+  // generate (kept as-is for your other flow)
   const handelGenerate = async () => {
     if (!imagePreview) return;
     try {
@@ -237,8 +293,6 @@ const AiVisualizerPage = () => {
 
       setOutPutImage(result);
       setIsVisualized(true);
-
-      // reset input, disable generate until user types again
       setPrompt("");
       setCanGenerate(false);
     } catch {
@@ -276,10 +330,10 @@ const AiVisualizerPage = () => {
     setPlacedObjects([]);
     setOutPutImage(null);
     setMasks({});
+    setAfterPreviewUrl(null);
     setCanGenerate(Boolean(imagePreview) && prompt.trim().length > 0);
   };
 
-  // download updated canvas
   const handleDownloadImage = () => {
     if (!outPutImage) return alert("Please generate before downloading.");
     setSelectedObjectId(null);
@@ -293,7 +347,7 @@ const AiVisualizerPage = () => {
     }, 80);
   };
 
-  // tools panel (left)
+  // tools
   const ToolsPanel = () => (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-2">
@@ -343,7 +397,7 @@ const AiVisualizerPage = () => {
         </button>
       </div>
 
-      {/* tab contents */}
+      {/* palettes / objects */}
       <div className="space-y-4">
         {activeTab === "walls" && (
           <div className="space-y-4">
@@ -473,7 +527,7 @@ const AiVisualizerPage = () => {
 
           <Button
             onClick={handleVisualizeClick}
-            disabled={!baseImage || isProcessing}
+            disabled={!imagePreview || isProcessing}
             className="bg-amber-500 text-white hover:bg-amber-600"
             aria-busy={isProcessing ? "true" : "false"}
           >
@@ -548,11 +602,11 @@ const AiVisualizerPage = () => {
         {/* center canvas & prompt */}
         <main className="lg:col-span-5">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 h-full flex flex-col gap-3">
-            {/* prompt + generate */}
+            {/* prompt + generate (kept) */}
             <div className="bg-gray-50 rounded-lg p-3">
               <textarea
                 className="w-full rounded-lg p-3 outline-none border border-gray-200 focus:border-gray-300"
-                placeholder="Describe your change (e.g., modern style, white walls)"
+                placeholder="Describe your change (optional; Analyze now auto-styles)"
                 rows="3"
                 value={prompt}
                 onChange={(e) => {
@@ -572,13 +626,12 @@ const AiVisualizerPage = () => {
               </button>
             </div>
 
-            {/* canvas (image + masks + objects) */}
+            {/* canvas */}
             <div
               ref={canvasRef}
               onClick={() => setSelectedObjectId(null)}
               className="relative bg-gray-100 rounded-lg border border-gray-200 min-h-[360px] sm:min-h-[440px] md:min-h-[520px] flex items-center justify-center overflow-hidden"
             >
-              {/* base image */}
               {!baseImage && (
                 <div className="text-center text-gray-400 flex flex-col items-center gap-2">
                   <FaUpload className="text-3xl" />
@@ -587,118 +640,12 @@ const AiVisualizerPage = () => {
               )}
               {baseImage && (
                 <img
+                  ref={imgRef}
+                  onLoad={measureImg}
                   src={baseImage}
                   alt="Your Room"
                   className="w-full h-full object-contain block"
                 />
-              )}
-
-              {/* MASK OVERLAYS */}
-              {isVisualized && (
-                <>
-                  {/* SVG masks */}
-                  {(masks?.floorMask ||
-                    masks?.wallMask ||
-                    masks?.ceilingMask) && (
-                    <svg
-                      className="absolute inset-0 w-full h-full pointer-events-none"
-                      viewBox="0 0 800 600"
-                      preserveAspectRatio="none"
-                    >
-                      <defs>
-                        <pattern
-                          id="floorPattern"
-                          patternUnits="userSpaceOnUse"
-                          width="100"
-                          height="100"
-                        >
-                          <image
-                            href={selectedFloorPattern.image}
-                            width="100"
-                            height="100"
-                          />
-                        </pattern>
-                      </defs>
-
-                      {masks?.floorMask && (
-                        <path
-                          d={masks.floorMask}
-                          fill="url(#floorPattern)"
-                          style={{ mixBlendMode: "multiply" }}
-                        />
-                      )}
-                      {masks?.wallMask && (
-                        <path
-                          d={masks.wallMask}
-                          fill={selectedWallColor}
-                          style={{ mixBlendMode: "multiply" }}
-                        />
-                      )}
-                      {masks?.ceilingMask && (
-                        <path
-                          d={masks.ceilingMask}
-                          fill={selectedCeilingColor}
-                          style={{ mixBlendMode: "multiply" }}
-                        />
-                      )}
-                    </svg>
-                  )}
-
-                  {/* PNG masks (if your backend returns mask pngs later) */}
-                  {isVisualized &&
-                    (masks?.floorMaskUrl ||
-                      masks?.wallMaskUrl ||
-                      masks?.ceilingMaskUrl) && (
-                      <div className="absolute inset-0 pointer-events-none">
-                        {masks?.floorMaskUrl && (
-                          <div
-                            className="absolute inset-0"
-                            style={{
-                              WebkitMaskImage: `url(${masks.floorMaskUrl})`,
-                              maskImage: `url(${masks.floorMaskUrl})`,
-                              WebkitMaskRepeat: "no-repeat",
-                              maskRepeat: "no-repeat",
-                              WebkitMaskSize: "contain",
-                              maskSize: "contain",
-                              backgroundImage: `url(${selectedFloorPattern.image})`,
-                              backgroundRepeat: "repeat",
-                              mixBlendMode: "multiply",
-                            }}
-                          />
-                        )}
-                        {masks?.wallMaskUrl && (
-                          <div
-                            className="absolute inset-0"
-                            style={{
-                              WebkitMaskImage: `url(${masks.wallMaskUrl})`,
-                              maskImage: `url(${masks.wallMaskUrl})`,
-                              WebkitMaskRepeat: "no-repeat",
-                              maskRepeat: "no-repeat",
-                              WebkitMaskSize: "contain",
-                              maskSize: "contain",
-                              backgroundColor: selectedWallColor,
-                              mixBlendMode: "multiply",
-                            }}
-                          />
-                        )}
-                        {masks?.ceilingMaskUrl && (
-                          <div
-                            className="absolute inset-0"
-                            style={{
-                              WebkitMaskImage: `url(${masks.ceilingMaskUrl})`,
-                              maskImage: `url(${masks.ceilingMaskUrl})`,
-                              WebkitMaskRepeat: "no-repeat",
-                              maskRepeat: "no-repeat",
-                              WebkitMaskSize: "contain",
-                              maskSize: "contain",
-                              backgroundColor: selectedCeilingColor,
-                              mixBlendMode: "multiply",
-                            }}
-                          />
-                        )}
-                      </div>
-                    )}
-                </>
               )}
 
               {/* draggable objects */}
@@ -714,7 +661,6 @@ const AiVisualizerPage = () => {
                 />
               ))}
 
-              {/* processing overlay */}
               {isProcessing && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white">
                   <FaSpinner className="animate-spin text-3xl" />
@@ -726,13 +672,11 @@ const AiVisualizerPage = () => {
 
         {/* right: before/after + layers + actions */}
         <aside className="lg:col-span-4 flex flex-col gap-4">
-          {/* BEFORE / AFTER — no extra space */}
           <div className="bg-white rounded-xl border border-gray-200">
             <div className="px-3 pt-3">
               <h3 className="font-semibold">After / Before</h3>
             </div>
 
-            {/* Fixed aspect ratio ensures both fill equally */}
             <div className="rounded-b-xl overflow-hidden aspect-[16/9] sm:aspect-[4/3]">
               <div className="w-full h-full before-after-same">
                 <ReactBeforeSliderComponent
@@ -740,14 +684,17 @@ const AiVisualizerPage = () => {
                     imageUrl: imagePreview || "https://placehold.co/1280x720",
                   }}
                   secondImage={{
-                    imageUrl: outPutImage || "https://placehold.co/1280x720",
+                    imageUrl:
+                      outPutImage ||
+                      afterPreviewUrl ||
+                      "https://placehold.co/1280x720",
                   }}
                   style={{ width: "100%", height: "100%" }}
                 />
               </div>
             </div>
           </div>
-          {/* Layers */}
+
           <div className="bg-white rounded-xl border border-gray-200 p-3 flex-1 min-h-[220px]">
             <h3 className="font-semibold mb-2">Design Layers</h3>
             {placedObjects.length === 0 ? (
@@ -782,7 +729,6 @@ const AiVisualizerPage = () => {
             )}
           </div>
 
-          {/* Actions — aligned icons */}
           <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-2">
             <Button
               onClick={handleReset}

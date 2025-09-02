@@ -1,76 +1,130 @@
-// routes/segment.js
+// routes/segmentRoutes.js
 const express = require("express");
-const fetch = require("node-fetch"); // v2 (require) is fine
+const multer = require("multer");
+const fetch = require("node-fetch"); // v2 CommonJS
+const { Buffer } = require("buffer");
+const { Blob: NodeBlob } = require("buffer"); // fallback if global Blob is missing
+
 const router = express.Router();
 
-const GRADIO_SPACE_SEGMENT = process.env.GRADIO_SPACE_SEGMENT; // e.g. "https://your-space.hf.space/"
+// Your public Space (no token needed)
+const SPACE_ID_OR_URL =
+  process.env.GRADIO_SPACE_SEGMENT || "awmsafras/roomsegmentaion";
 
-function dataUrlToBlob(dataUrl) {
-  // data:[<mime>][;base64],<data>
-  const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
-  if (!match) throw new Error("Invalid data URL");
-  const mime = match[1];
-  const b64 = match[2];
-  const buf = Buffer.from(b64, "base64");
-  return new Blob([buf], { type: mime });
+// Multer: in-memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype?.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only image files are allowed"));
+  },
+});
+
+// Convert a remote URL to a data URL so the FE can render without CORS
+async function toDataUrl(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Fetch failed (${r.status})`);
+  const ab = await r.arrayBuffer();
+  const mime = r.headers.get("content-type") || "image/png";
+  const b64 = Buffer.from(ab).toString("base64");
+  return `data:${mime};base64,${b64}`;
 }
 
-router.post("/", async (req, res) => {
+/**
+ * POST /api/segment
+ * form-data: image=<file>
+ */
+router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { imageUrl } = req.body || {};
-    if (!imageUrl)
-      return res.status(400).json({ error: "imageUrl is required" });
-    if (!GRADIO_SPACE_SEGMENT) {
-      return res.status(500).json({ error: "Missing GRADIO_SPACE_SEGMENT" });
+    const file = req.file;
+    if (!file)
+      return res.status(400).json({ error: "image (file) is required" });
+
+    console.log("Processing file:", {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    });
+
+    // Prepare a Blob for Gradio (works with gr.Image(type="pil"))
+    const BlobCtor = typeof Blob !== "undefined" ? Blob : NodeBlob;
+    const blob = new BlobCtor([file.buffer], {
+      type: file.mimetype || "image/png",
+    });
+
+    // Gradio client
+    const { Client } = await import("@gradio/client");
+    const client = await Client.connect(SPACE_ID_OR_URL);
+
+    // Find an endpoint; default to /predict
+    const api = await client.view_api();
+    let endpoint = "/predict";
+    if (api?.named_endpoints && Object.keys(api.named_endpoints).length > 0) {
+      // pick the first named endpoint
+      endpoint = Object.keys(api.named_endpoints)[0];
+    } else if (Array.isArray(api) && api[0]?.endpoint) {
+      endpoint = api[0].endpoint;
+    }
+    console.log("Using Gradio endpoint:", endpoint);
+
+    // Predict with the Blob (no client.upload!)
+    const result = await client.predict(endpoint, [blob]);
+    console.log("Gradio client raw result:", result);
+
+    // Normalize output → data URL for frontend
+    let resultImageUrl = null;
+    const payload = result?.data ?? result;
+    const first = Array.isArray(payload) ? payload[0] : payload;
+
+    if (typeof first === "string" && first.startsWith("data:image/")) {
+      resultImageUrl = first;
+    } else if (first?.url) {
+      resultImageUrl = await toDataUrl(first.url);
+    } else if (
+      first?.data &&
+      typeof first.data === "string" &&
+      first.data.startsWith("data:image/")
+    ) {
+      resultImageUrl = first.data;
+    } else if (first?.path) {
+      // If Space returns a file path
+      const baseUrl = `https://huggingface.co/spaces/${SPACE_ID_OR_URL}`;
+      const fullUrl = `${baseUrl}/file=${first.path}`;
+      resultImageUrl = await toDataUrl(fullUrl);
     }
 
-    // ESM-only package; dynamic import works under CommonJS
-    const { Client } = await import("@gradio/client");
-
-    let inputBlob;
-
-    if (/^data:image\//i.test(imageUrl)) {
-      // Handle base64 data URLs from <input type="file"> readers, canvases, etc.
-      inputBlob = dataUrlToBlob(imageUrl);
-    } else if (/^https?:\/\//i.test(imageUrl)) {
-      // Remote image – fetch and wrap as Blob
-      const r = await fetch(imageUrl);
-      if (!r.ok)
-        return res
-          .status(400)
-          .json({ error: `Failed to fetch imageUrl (${r.status})` });
-      const ab = await r.arrayBuffer();
-      const ct = r.headers.get("content-type") || "application/octet-stream";
-      inputBlob = new Blob([ab], { type: ct });
-    } else {
-      return res.status(400).json({
-        error:
-          "Unsupported imageUrl. Provide http(s) URL or data:image/*;base64,...",
+    if (!resultImageUrl) {
+      console.error("No valid image found in result:", {
+        result,
+        payload,
+        first,
+      });
+      return res.status(502).json({
+        error: "No image returned from Gradio Space",
+        debug: { result, payload, first },
       });
     }
 
-    // Connect to your Space and call the Interface endpoint.
-    const client = await Client.connect(GRADIO_SPACE_SEGMENT);
-
-    // Your Space has a single Image input; pass a single Blob in the same order.
-    // Default Interface endpoint is "/predict".
-    const result = await client.predict("/predict", [inputBlob]);
-
-    // Gradio may return { data: {...} } or { data: [ {...} ] }
-    let payload = result?.data ?? result;
-    if (Array.isArray(payload)) payload = payload[0];
-
-    // Your Space returns keys: wallMaskUrl, floorMaskUrl, ceilingMaskUrl
     return res.json({
-      wallMaskUrl: payload?.wallMaskUrl ?? null,
-      floorMaskUrl: payload?.floorMaskUrl ?? null,
-      ceilingMaskUrl: payload?.ceilingMaskUrl ?? null,
+      resultImageUrl,
+      wallMaskUrl: null,
+      floorMaskUrl: null,
+      ceilingMaskUrl: null,
     });
   } catch (err) {
     console.error("SEGMENT ERROR:", err);
-    return res
-      .status(500)
-      .json({ error: err?.message || "Segmentation failed" });
+    let errorDetail = err?.message || String(err);
+    if (err?.response?.data) {
+      errorDetail += ` | Response: ${JSON.stringify(err.response.data)}`;
+    }
+    if (err?.stack) {
+      console.error("Stack trace:", err.stack);
+    }
+    return res.status(500).json({
+      error: "Segmentation failed",
+      detail: errorDetail,
+    });
   }
 });
 
