@@ -18,6 +18,7 @@ const designRoutes = require("./routes/designs");
 const paymentRoutes = require("./routes/paymentRoutes");
 const portfolioRoutes = require("./routes/portfolioRoutes"); // <-- IMPORT NEW ROUTE
 const roomVisualizeRoute = require("./routes/roomVisualizeRoute");
+const segmentRoutes = require("./routes/segmentRoutes");
 
 const startServer = async () => {
   // Connect to the database first
@@ -43,6 +44,7 @@ const startServer = async () => {
   app.use("/api/payments", paymentRoutes);
   app.use("/api/portfolio", portfolioRoutes); // <-- USE NEW ROUTE
   app.use("/api/room-visualize", roomVisualizeRoute);
+  app.use("/api/segment", segmentRoutes);
 
   // --- Server Initialization ---
   const PORT = process.env.PORT || 5000;

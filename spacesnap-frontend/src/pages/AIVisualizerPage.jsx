@@ -82,6 +82,7 @@ const AiVisualizerPage = () => {
   const [roomStyle, setRoomStyle] = useState("");
   const [aiStyle, setAiStyle] = useState("");
   const [canGenerate, setCanGenerate] = useState(false);
+  const [analyzeStatus, setAnalyzeStatus] = useState("");
 
   // prefer generated image when available
   const baseImage = outPutImage || imagePreview;
@@ -166,28 +167,54 @@ const AiVisualizerPage = () => {
   };
 
   // upload
-  const handleImageUpload = (e) => {
+  // REPLACE your handleImageUpload with this:
+  const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setImagePreview(url);
-      setOutPutImage(null);
-      setIsVisualized(false);
-      setMasks({});
-      setCanGenerate(prompt.trim().length > 0);
-    }
+    if (!file) return;
+
+    // convert to data URL so /api/segment can receive it directly
+    const toDataUrl = (f) =>
+      new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = reject;
+        r.readAsDataURL(f);
+      });
+
+    const dataUrl = await toDataUrl(file);
+
+    setImagePreview(dataUrl);
+    setOutPutImage(null);
+    setIsVisualized(false);
+    setMasks({});
+    setCanGenerate(prompt.trim().length > 0);
   };
 
   // analyze (segment current image)
   const handleVisualizeClick = async () => {
     if (!baseImage) return;
+
     setIsProcessing(true);
+    setAnalyzeStatus("Preparing image…");
+    setMasks({}); // clear previous masks to avoid visual flicker
+
     try {
-      const result = await aiVisualizerService.segmentRoom(baseImage);
-      setMasks(result || {});
+      setAnalyzeStatus("Analyzing scene (AI)...");
+      const seg = await aiVisualizerService.segmentRoom(baseImage);
+
+      setAnalyzeStatus("Applying masks…");
+      setMasks(seg || {});
       setIsVisualized(true);
+
+      // optional: bring focus to styling tools after first analysis
+      setShowTools(true);
+
+      setAnalyzeStatus("Done");
+      // fade the status after a moment
+      setTimeout(() => setAnalyzeStatus(""), 900);
     } catch {
-      alert("AI analysis failed.");
+      setAnalyzeStatus("");
+      alert("AI segmentation failed.");
     } finally {
       setIsProcessing(false);
     }
@@ -448,12 +475,22 @@ const AiVisualizerPage = () => {
             onClick={handleVisualizeClick}
             disabled={!baseImage || isProcessing}
             className="bg-amber-500 text-white hover:bg-amber-600"
+            aria-busy={isProcessing ? "true" : "false"}
           >
             <span className="inline-flex items-center gap-2">
               <FaMagic />
               <span>{isProcessing ? "Analyzing..." : "Analyze"}</span>
             </span>
           </Button>
+
+          {analyzeStatus && (
+            <span
+              className="ml-2 text-sm px-2 py-1 rounded bg-amber-50 text-amber-700 border border-amber-200 transition-opacity"
+              aria-live="polite"
+            >
+              {analyzeStatus}
+            </span>
+          )}
         </div>
       </header>
 
@@ -608,58 +645,59 @@ const AiVisualizerPage = () => {
                   )}
 
                   {/* PNG masks (if your backend returns mask pngs later) */}
-                  {(masks?.floorMaskUrl ||
-                    masks?.wallMaskUrl ||
-                    masks?.ceilingMaskUrl) && (
-                    <div className="absolute inset-0 pointer-events-none">
-                      {masks?.floorMaskUrl && (
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            WebkitMaskImage: `url(${masks.floorMaskUrl})`,
-                            maskImage: `url(${masks.floorMaskUrl})`,
-                            WebkitMaskRepeat: "no-repeat",
-                            maskRepeat: "no-repeat",
-                            WebkitMaskSize: "contain",
-                            maskSize: "contain",
-                            backgroundImage: `url(${selectedFloorPattern.image})`,
-                            backgroundRepeat: "repeat",
-                            mixBlendMode: "multiply",
-                          }}
-                        />
-                      )}
-                      {masks?.wallMaskUrl && (
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            WebkitMaskImage: `url(${masks.wallMaskUrl})`,
-                            maskImage: `url(${masks.wallMaskUrl})`,
-                            WebkitMaskRepeat: "no-repeat",
-                            maskRepeat: "no-repeat",
-                            WebkitMaskSize: "contain",
-                            maskSize: "contain",
-                            backgroundColor: selectedWallColor,
-                            mixBlendMode: "multiply",
-                          }}
-                        />
-                      )}
-                      {masks?.ceilingMaskUrl && (
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            WebkitMaskImage: `url(${masks.ceilingMaskUrl})`,
-                            maskImage: `url(${masks.ceilingMaskUrl})`,
-                            WebkitMaskRepeat: "no-repeat",
-                            maskRepeat: "no-repeat",
-                            WebkitMaskSize: "contain",
-                            maskSize: "contain",
-                            backgroundColor: selectedCeilingColor,
-                            mixBlendMode: "multiply",
-                          }}
-                        />
-                      )}
-                    </div>
-                  )}
+                  {isVisualized &&
+                    (masks?.floorMaskUrl ||
+                      masks?.wallMaskUrl ||
+                      masks?.ceilingMaskUrl) && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        {masks?.floorMaskUrl && (
+                          <div
+                            className="absolute inset-0"
+                            style={{
+                              WebkitMaskImage: `url(${masks.floorMaskUrl})`,
+                              maskImage: `url(${masks.floorMaskUrl})`,
+                              WebkitMaskRepeat: "no-repeat",
+                              maskRepeat: "no-repeat",
+                              WebkitMaskSize: "contain",
+                              maskSize: "contain",
+                              backgroundImage: `url(${selectedFloorPattern.image})`,
+                              backgroundRepeat: "repeat",
+                              mixBlendMode: "multiply",
+                            }}
+                          />
+                        )}
+                        {masks?.wallMaskUrl && (
+                          <div
+                            className="absolute inset-0"
+                            style={{
+                              WebkitMaskImage: `url(${masks.wallMaskUrl})`,
+                              maskImage: `url(${masks.wallMaskUrl})`,
+                              WebkitMaskRepeat: "no-repeat",
+                              maskRepeat: "no-repeat",
+                              WebkitMaskSize: "contain",
+                              maskSize: "contain",
+                              backgroundColor: selectedWallColor,
+                              mixBlendMode: "multiply",
+                            }}
+                          />
+                        )}
+                        {masks?.ceilingMaskUrl && (
+                          <div
+                            className="absolute inset-0"
+                            style={{
+                              WebkitMaskImage: `url(${masks.ceilingMaskUrl})`,
+                              maskImage: `url(${masks.ceilingMaskUrl})`,
+                              WebkitMaskRepeat: "no-repeat",
+                              maskRepeat: "no-repeat",
+                              WebkitMaskSize: "contain",
+                              maskSize: "contain",
+                              backgroundColor: selectedCeilingColor,
+                              mixBlendMode: "multiply",
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
                 </>
               )}
 
@@ -699,10 +737,10 @@ const AiVisualizerPage = () => {
               <div className="w-full h-full before-after-same">
                 <ReactBeforeSliderComponent
                   firstImage={{
-                    imageUrl: imagePreview || "https://placehold.co/800x600",
+                    imageUrl: imagePreview || "https://placehold.co/1280x720",
                   }}
                   secondImage={{
-                    imageUrl: outPutImage || "https://placehold.co/800x600",
+                    imageUrl: outPutImage || "https://placehold.co/1280x720",
                   }}
                   style={{ width: "100%", height: "100%" }}
                 />
