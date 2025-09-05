@@ -4,7 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 /* ... your existing @tailwind directives ... */
 
 .ar-button {
@@ -20,4 +19,17 @@
   border-radius: 8px;
   cursor: pointer;
   z-index: 100;
+}
+
+.before-after-same,
+.before-after-same > * {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.before-after-same img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important; /* cover ensures both scale and crop identically */
+  display: block;
 }
