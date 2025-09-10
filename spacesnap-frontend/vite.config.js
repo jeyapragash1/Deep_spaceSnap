@@ -10,7 +10,7 @@ export default defineConfig({
     // This is the new part that fixes the error.
     // It tells Vite that your ngrok address is allowed.
     allowedHosts: [
-      'ef31f53ea3cc.ngrok-free.app'
+      'b0c949382cdd.ngrok-free.app'
     ]
   }
 })

@@ -38,12 +38,6 @@
 // ];
 
 
-//     { id: 7, image: img7, title: 'Monochrome Modern Kitchen', designer: 'Elena Romanova', style: 'modern', description: 'Sleek + functional.', details: ['Matte Black Cabinets', 'Quartz Countertops'] },
-//     { id: 8, image: img8, title: 'Vibrant Eclectic Lounge', designer: 'John Davis', style: 'eclectic', description: 'Personality overload (in a good way).', details: ['Velvet Sofa', 'Gallery Wall'] },
-//     { id: 9, image: img9, title: 'Natural Light Bohemian', designer: 'Leo Carter', style: 'bohemian', description: 'Sunlight + soft fabrics = peace.', details: ['Large Windows', 'Linen Curtains'] },
-//     { id: 10, image: img10, title: 'Clean Lines Office', designer: 'Elena Romanova', style: 'minimalist', description: 'Focus. Flow. Finish your to-do list.', details: ['Minimalist Desk', 'Hidden Storage'] },
-//     { id: 11, image: img11, title: 'Modern Simplicity', designer: 'Anya Sharma', style: 'modern', description: 'Pure and elegant.', details: ['Geometric Rug', 'Abstract Art'] },
-//     { id: 12, image: img12, title: 'Rustic Charm Bedroom', designer: 'John Davis', style: 'rustic', description: 'Sleep in timeless style.', details: ['Barn Door', 'Knit Throw Blanket'] },
 //     { id: 13, image: img13, title: 'Soft Boho Living', designer: 'Maya Lin', style: 'bohemian', description: 'Delicate tones and soft textures.', details: ['Boho Throw Pillows', 'Soft Wool Carpet'] },
 //     { id: 14, image: img14, title: 'Bold Industrial Kitchen', designer: 'Oscar Lee', style: 'industrial', description: 'Where grit meets gourmet.', details: ['Iron Shelves', 'Concrete Island'] },
 //     { id: 15, image: img15, title: 'Nordic Winter Living Room', designer: 'Freya Johansen', style: 'scandinavian', description: 'Stay cozy all year long.', details: ['White Washed Walls', 'Woolen Blankets'] },

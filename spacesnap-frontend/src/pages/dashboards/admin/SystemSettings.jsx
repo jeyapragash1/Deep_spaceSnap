@@ -45,13 +45,13 @@ const SystemSettings = () => {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <SettingsCard 
+                {/* <SettingsCard 
                     title="Payment Gateway"
                     description="Manage Stripe or Razorpay API keys and settings."
                     buttonText="Configure Payments"
                     icon={<CreditCard size={24}/>}
                     linkTo="/admin/payment-settings" // A placeholder link for the future
-                />
+                /> */}
                 <SettingsCard 
                     title="Email Templates"
                     description="Edit the content of emails sent to users (e.g., password reset)."
