@@ -1,52 +1,98 @@
-// services/aiVisualizerService.js
-import axios from "axios";
+import geminiService from "./geminiNanoService";
 
-const SEGMENT_API_URL = "http://localhost:5000/api/segment";
-
-function filenameFromBlob(blob, fallback = "room.png") {
-  const type = blob?.type || "";
-  if (type.includes("jpeg")) return "room.jpg";
-  if (type.includes("png")) return "room.png";
-  if (type.includes("webp")) return "room.webp";
-  if (type.includes("gif")) return "room.gif";
-  return fallback;
+async function imageSourceToElement(imageSource) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    
+    if (imageSource instanceof File || imageSource instanceof Blob) {
+      img.src = URL.createObjectURL(imageSource);
+    } else if (typeof imageSource === "string") {
+      img.src = imageSource;
+    } else {
+      reject(new Error("Unsupported image source"));
+    }
+  });
 }
 
-export async function segmentRoom(imageSource) {
-  let fileBlob;
-
-  // Blob/File passed in directly
-  if (imageSource instanceof Blob || imageSource instanceof File) {
-    fileBlob = imageSource;
-  }
-  // data URL string → Blob
-  else if (typeof imageSource === "string") {
-    const r = await fetch(imageSource);
-    fileBlob = await r.blob();
-  } else {
-    throw new Error("Unsupported image source");
-  }
-
-  const form = new FormData();
-  form.append("image", fileBlob, filenameFromBlob(fileBlob));
-
+export async function analyzeRoomWithGeminiNano(imageSource, customPrompt = '') {
   try {
-    const { data } = await axios.post(SEGMENT_API_URL, form /* no headers */);
+    
+    const isAvailable = await geminiService.checkAvailability();
+    if (!isAvailable) {
+      throw new Error('Gemini API key is not configured');
+    }
+
+    // Convert image source to element
+    const imageElement = await imageSourceToElement(imageSource);
+    
+    // Analyze with Gemini API
+    const analysis = await geminiService.analyzeRoom(imageElement, customPrompt);
+    
+    if (!analysis.success) {
+      throw new Error(analysis.error);
+    }
+
     return {
-      resultImageUrl: data?.resultImageUrl ?? null,
-      wallMaskUrl: data?.wallMaskUrl ?? null,
-      floorMaskUrl: data?.floorMaskUrl ?? null,
-      ceilingMaskUrl: data?.ceilingMaskUrl ?? null,
+      resultImageUrl: imageSource, 
+      analysis: analysis.analysis,
+      suggestions: analysis.suggestions,
+      wallMaskUrl: null,
+      floorMaskUrl: null,
+      ceilingMaskUrl: null,
+      geminiAnalysis: true
     };
-  } catch (err) {
-    // surface backend error message if present
-    const detail =
-      err?.response?.data?.detail ||
-      err?.response?.data?.error ||
-      err?.message ||
-      "Unknown error";
-    throw new Error(`Segmentation failed: ${detail}`);
+  } catch (error) {
+    throw error; 
   }
 }
 
-export default { segmentRoom };
+export async function generateCustomizationPrompt(imageSource, changes) {
+  try {
+    const isAvailable = await geminiService.checkAvailability();
+    if (!isAvailable) {
+      return { success: false, error: 'Gemini API not available' };
+    }
+
+    const imageElement = await imageSourceToElement(imageSource);
+    const result = await geminiService.generateCustomization(imageElement, changes);
+    
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function generateImagePrompt(analysis, roomStyle, aiStyle, customPrompt) {
+  try {
+    const result = await geminiService.generateImagePrompt(analysis, roomStyle, aiStyle, customPrompt);
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function generateImageWithNanoBanana(imageSource, prompt) {
+  try {
+    const imageElement = await imageSourceToElement(imageSource);
+    
+    const result = await geminiService.generateImage(imageElement, prompt);
+    
+    if (result.success) {
+      return result.imageUrl;
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+export default { 
+  analyzeRoomWithGeminiNano, 
+  generateCustomizationPrompt,
+  generateImagePrompt,
+  generateImageWithNanoBanana
+};
