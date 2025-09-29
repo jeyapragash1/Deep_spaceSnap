@@ -2,138 +2,83 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaUsers, FaLightbulb, FaRocket, FaFlagCheckered } from 'react-icons/fa';
-// import MainLayout from '../components/layout/MainLayout'; // Uncomment if using layout wrapper
-
-// --- LOCAL IMAGE IMPORTS ---
-import aboutHeroImg from '../assets/images/17.jpg';
-import teamImage from '../assets/images/18.jpg';
+import { FaCamera, FaMagic, FaCouch, FaUniversity, FaUsers } from 'react-icons/fa';
 
 const AboutPage = () => {
   const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } }
   };
 
-  const timelineItem = {
-    hidden: { opacity: 0, x: -50 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.5 } }
-  };
+  const featureCard = (icon, title, text) => (
+    <motion.div variants={fadeIn} className="text-center p-6">
+      <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 bg-blue-100 rounded-full">
+        {icon}
+      </div>
+      <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+      <p className="text-gray-600">{text}</p>
+    </motion.div>
+  );
 
   return (
-    // <MainLayout> {/* Uncomment if you're wrapping pages with MainLayout */}
     <motion.div initial="hidden" animate="visible" variants={fadeIn}>
       {/* --- HEADER SECTION --- */}
       <header
-        className="relative h-[50vh] bg-cover bg-center"
-        style={{ backgroundImage: `url(${aboutHeroImg})` }}
+        className="relative h-[60vh] bg-cover bg-center flex items-center justify-center text-center"
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=2127&auto=format&fit=crop')` }}
       >
-        <div className="absolute inset-0 bg-neutral-dark bg-opacity-60 flex items-center justify-center">
-          <div className="text-center text-white">
-            <h1 className="text-5xl md:text-7xl font-extrabold" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
-              Our Story
-            </h1>
-            <p className="text-xl mt-2">Bridging Imagination and Reality</p>
-          </div>
+        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div className="relative z-10 text-white px-4">
+          <motion.h1 
+            initial={{ opacity: 0, scale: 0.8 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            transition={{ duration: 0.8, delay: 0.2 }} 
+            className="text-5xl md:text-7xl font-extrabold tracking-tight"
+          >
+            Reimagining Your Space
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.8, delay: 0.4 }} 
+            className="text-xl mt-4 max-w-2xl mx-auto"
+          >
+            We're bridging the gap between imagination and reality with cutting-edge AI and AR technology.
+          </motion.p>
         </div>
       </header>
 
       {/* --- MAIN CONTENT --- */}
       <div className="bg-white">
-        <div className="container mx-auto px-4 py-20">
+        <div className="container mx-auto px-4 py-24">
 
-          {/* --- MISSION --- */}
-          <section className="text-center max-w-4xl mx-auto mb-20">
+          {/* --- HOW IT WORKS --- */}
+          <section className="text-center max-w-4xl mx-auto mb-24">
             <motion.div
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
               variants={fadeIn}
             >
-              <FaRocket className="text-primary-teal text-6xl mx-auto mb-4" />
-              <h2 className="text-4xl font-bold text-neutral-dark mb-4">Our Mission</h2>
-              <p className="text-lg text-gray-700 leading-relaxed">
-                At SpaceSnap, our mission is to democratize interior design. We empower everyone to
-                visualize and create their dream living spaces with intuitive, powerful tools. By
-                leveraging cutting-edge AI and AR, we turn design ideas into tangible realities,
-                making the process accessible, exciting, and risk-free.
+              <h2 className="text-4xl font-bold text-gray-800 mb-4">Our Unique Process</h2>
+              <p className="text-lg text-gray-600 leading-relaxed mb-12">
+                SpaceSnap transforms interior design from a guessing game into an exciting creative journey. Our innovative three-step process makes it simple to see your vision come to life.
               </p>
+              <div className="grid md:grid-cols-3 gap-8">
+                {featureCard(<FaCamera className="text-blue-500" size={32} />, "1. Scan Your Space", "Start by taking a quick scan of your room with your device's camera. Our app captures multiple images to understand your space's layout and lighting.")}
+                {featureCard(<FaMagic className="text-purple-500" size={32} />, "2. Reimagine with AI", "Select your best photo and tell our AI what you envision. From 'modern minimalist' to 'cozy bohemian,' it generates a stunning new version of your room in seconds.")}
+                {/* --- THIS IS THE FIXED LINE --- */}
+                {featureCard(<FaCouch className="text-green-500" size={32} />, "3. Visualize in AR", "Inspired by your new design? Take 3D models of real furniture and place them in your actual room using Augmented Reality to check the fit and style.")}
+                {/* --- END OF FIX --- */}
+              </div>
             </motion.div>
           </section>
 
-          {/* --- JOURNEY TIMELINE --- */}
-          <section className="mb-20">
-            <h2 className="text-4xl font-bold text-neutral-dark text-center mb-12">Our Journey</h2>
-            <div className="relative max-w-2xl mx-auto">
-              {/* Vertical Line */}
-              <div className="absolute left-4 top-0 h-full w-0.5 bg-gray-200"></div>
+          
 
-              {/* Timeline Items */}
-              {[{
-                icon: <FaLightbulb />,
-                title: "The Idea",
-                text: "Born from the frustration of 'will this fit?', SpaceSnap was conceived to solve the common problem of design visualization."
-              }, {
-                icon: <FaUsers />,
-                title: "The Team",
-                text: "A passionate team of Industrial Information Technology students from Uva Wellassa University, came together to build the solution."
-              }, {
-                icon: <FaFlagCheckered />,
-                title: "The Launch",
-                text: "After months of development and supervised guidance, SpaceSnap is launched to help users everywhere design better spaces."
-              }].map((item, index) => (
-                <motion.div
-                  key={index}
-                  variants={timelineItem}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  className="relative mb-8 pl-12"
-                >
-                  <div className="absolute left-0 top-0 flex items-center justify-center w-8 h-8 bg-primary-teal rounded-full text-white">
-                    {item.icon}
-                  </div>
-                  <h3 className="font-bold text-xl">{item.title}</h3>
-                  <p className="text-gray-600">{item.text}</p>
-                </motion.div>
-              ))}
-            </div>
-          </section>
-
-          {/* --- MEET THE TEAM --- */}
-          <section className="py-20 bg-neutral-light rounded-lg flex flex-col md:flex-row items-center gap-12">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="md:w-1/2"
-            >
-              <img
-                src={teamImage}
-                alt="A team working together"
-                className="rounded-lg shadow-xl w-full"
-              />
-            </motion.div>
-            <motion.div
-              variants={fadeIn}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="md:w-1/2 text-center md:text-left"
-            >
-              <h2 className="text-3xl font-bold text-neutral-dark mb-4">A Note of Thanks</h2>
-              <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                This project would not have been possible without the invaluable guidance of our
-                supervisors, Mr. H.P.D.P. Pathirana and Mr. S.S. Prajish. Their expertise and
-                support have been instrumental at every stage of development.
-              </p>
-            </motion.div>
-          </section>
         </div>
       </div>
     </motion.div>
-    // </MainLayout>
   );
 };
 

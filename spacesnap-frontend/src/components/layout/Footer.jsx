@@ -22,7 +22,7 @@ const Footer = () => {
             SpaceSnap
           </Link>
           <p className="text-gray-400 text-sm">Design Your Space in a Snap!</p>
-          <p className="text-gray-500 text-xs mt-2">Empowering your design journey with AI & AR.</p>
+          <p className="text-gray-500 text-xs mt-2">Empowering your design journey with AI's.</p>
         </div>
 
         {/* Quick Links */}
@@ -64,7 +64,7 @@ const Footer = () => {
               <FaLinkedinIn />
             </a>
           </div>
-          <p className="text-gray-500 text-sm mt-4">Uva Wellassa University, Sri Lanka</p>
+          <p className="text-gray-500 text-sm mt-4">Colombo 02, Sri Lanka</p>
           <p className="text-gray-500 text-sm">contact@spacesnap.com</p>
         </div>
       </div>
