@@ -14,36 +14,31 @@ import {
   Home,
   Briefcase,
   BarChart2,
-  Settings,
-  Lock
+  Settings
 } from 'lucide-react';
 
 // Reusable Sidebar Link Component
 const SidebarLink = ({ to, icon, children, isLocked }) => {
-  // If the link is locked, it redirects to the upgrade page
   if (isLocked) {
     return (
       <Link
         to="/upgrade"
-        className="flex items-center px-4 py-3 text-gray-500 bg-gray-100 rounded-lg cursor-not-allowed hover:bg-gray-200 relative"
+        className="flex items-center px-4 py-3 text-gray-500 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
       >
         {icon}
         <span className="ml-3 font-medium">{children}</span>
-        <span className="ml-auto text-yellow-800">
-          <Lock size={14} />
-        </span>
+        <span className="ml-auto text-xs bg-yellow-400 text-yellow-900 font-bold px-2 py-0.5 rounded-full">PRO</span>
       </Link>
     );
   }
 
-  // If the link is not locked, it behaves as a normal NavLink
   return (
     <NavLink
       to={to}
-      end // Use 'end' for the Dashboard link to avoid it staying active
+      end
       className={({ isActive }) =>
         `flex items-center px-4 py-3 rounded-lg transition-colors duration-200 text-gray-600 font-medium ${
-          isActive ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-gray-100 hover:text-gray-900'
+          isActive ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'
         }`
       }
     >
@@ -62,22 +57,18 @@ const UserDashboardLayout = () => {
     navigate('/login');
   };
 
-  // --- THIS IS THE KEY LOGIC ---
-  // A simple boolean to check if the user is premium or higher
-  const isPremiumOrHigher = user?.subscription === 'premium' || user?.role === 'designer' || user?.role === 'admin';
-
   // --- Sidebar Links based on User Role ---
-  const getUserLinks = () => [
-    { to: '/user/profile', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { to: '/style-quiz', icon: <Palette size={20} />, label: 'Style Quiz' },
-    // --- THIS IS THE FIX ---
-    // Both Visualizer and Room Preview are locked if the user is NOT premium or higher
-    { to: '/visualizer', icon: <Sparkles size={20} />, label: 'AI Visualizer', isLocked: !isPremiumOrHigher },
-    { to: '/ar-preview', icon: <Camera size={20} />, label: 'Scan & Reimagine AR', isLocked: !isPremiumOrHigher },
-    // --- END OF FIX ---
-    // { to: '/user/designs', icon: <FolderKanban size={20} />, label: 'My Designs' },
-    { to: '/user/account', icon: <Settings size={20} />, label: 'Account' },
-  ];
+  const getUserLinks = () => {
+    const isRegistered = user?.role === 'registered';
+    return [
+      { to: '/user/profile', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+      { to: '/style-quiz', icon: <Palette size={20} />, label: 'Style Quiz' },
+      { to: '/visualizer', icon: <Sparkles size={20} />, label: 'AI Visualizer' },
+      { to: '/ar-preview', icon: <Camera size={20} />, label: 'AR Preview', isLocked: isRegistered },
+      { to: '/user/designs', icon: <FolderKanban size={20} />, label: 'My Designs' },
+      { to: '/user/account', icon: <Settings size={20} />, label: 'Account' },
+    ];
+  };
 
    const getDesignerLinks = () => [
     { to: '/designer/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
@@ -106,8 +97,8 @@ const UserDashboardLayout = () => {
         </nav>
 
         {/* --- Bottom Sidebar Actions --- */}
-        <div className="pt-4 mt-auto border-t">
-          <SidebarLink to="/" icon={<Home size={20} />}>Back to Home</SidebarLink>
+        <div className="pt-4 border-t">
+          <SidebarLink to="/" icon={<Home size={20} />}>Home Page</SidebarLink>
           <button
             onClick={handleLogout}
             className="flex items-center w-full mt-2 px-4 py-3 text-gray-600 font-medium hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
@@ -120,14 +111,10 @@ const UserDashboardLayout = () => {
 
       {/* --- Main Content Area --- */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b h-16 flex items-center justify-between px-6">
+        <header className="bg-white border-b h-16 flex items-center px-6">
             <h1 className="text-xl font-semibold text-gray-900">
-                Dashboard
+                Welcome, {user?.name || 'User'}!
             </h1>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{user?.name || 'User'}</span>
-              <img src={user?.avatar || '/default-avatar.png'} alt="User Avatar" className="w-8 h-8 rounded-full" />
-            </div>
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
