@@ -64,7 +64,7 @@ const UserDashboardLayout = () => {
       { to: '/user/profile', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
       { to: '/style-quiz', icon: <Palette size={20} />, label: 'Style Quiz' },
       { to: '/visualizer', icon: <Sparkles size={20} />, label: 'AI Visualizer' },
-      { to: '/ar-preview', icon: <Camera size={20} />, label: 'AR Preview', isLocked: isRegistered },
+      { to: '/ar-preview', icon: <Camera size={20} />, label: 'Room Preview', isLocked: isRegistered },
       { to: '/user/designs', icon: <FolderKanban size={20} />, label: 'My Designs' },
       { to: '/user/account', icon: <Settings size={20} />, label: 'Account' },
     ];

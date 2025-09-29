@@ -86,7 +86,7 @@ const UpgradePage = () => {
                 </div>
                 
                 <ul className="bg-white p-6 rounded-xl shadow border space-y-3">
-                    <li className="flex items-center gap-3"><Star className="text-yellow-500" /> <span className="font-medium">Full AR Preview Access</span></li>
+                    <li className="flex items-center gap-3"><Star className="text-yellow-500" /> <span className="font-medium">Full Room Preview Access</span></li>
                     <li className="flex items-center gap-3"><Star className="text-yellow-500" /> <span className="font-medium">Unlimited Saved Designs</span></li>
                     <li className="flex items-center gap-3"><Star className="text-yellow-500" /> <span className="font-medium">Priority Support</span></li>
                 </ul>

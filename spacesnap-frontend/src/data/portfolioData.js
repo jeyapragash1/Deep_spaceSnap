@@ -38,9 +38,6 @@
 // ];
 
 
-//     { id: 13, image: img13, title: 'Soft Boho Living', designer: 'Maya Lin', style: 'bohemian', description: 'Delicate tones and soft textures.', details: ['Boho Throw Pillows', 'Soft Wool Carpet'] },
-//     { id: 14, image: img14, title: 'Bold Industrial Kitchen', designer: 'Oscar Lee', style: 'industrial', description: 'Where grit meets gourmet.', details: ['Iron Shelves', 'Concrete Island'] },
-//     { id: 15, image: img15, title: 'Nordic Winter Living Room', designer: 'Freya Johansen', style: 'scandinavian', description: 'Stay cozy all year long.', details: ['White Washed Walls', 'Woolen Blankets'] },
 //     { id: 16, image: img16, title: 'Zen Minimal Bathroom', designer: 'Yuki Tanaka', style: 'minimalist', description: 'Less clutter, more calm.', details: ['Stone Basin Sink', 'Hidden Cabinets'] },
 //     { id: 17, image: img17, title: 'Cottagecore Rustic Kitchen', designer: 'Emma Rose', style: 'rustic', description: 'Farmhouse energy, Pinterest approved.', details: ['Open Pantry', 'Wooden Countertops'] },
 //     { id: 18, image: img18, title: 'Modern High-Rise View', designer: 'Anya Sharma', style: 'modern', description: 'A view worth the rent.', details: ['Floor to Ceiling Windows', 'Neutral Palette'] },

@@ -13,9 +13,9 @@
     "@google/generative-ai": "^0.24.1",
     "@google/model-viewer": "^4.1.0",
     "@react-oauth/google": "^0.12.2",
-    "@react-three/drei": "^10.6.1",
-    "@react-three/fiber": "^9.3.0",
-    "@react-three/xr": "^6.6.22",
+    "@react-three/drei": "^9.56.24",
+    "@react-three/fiber": "^8.11.0",
+    "@react-three/xr": "^5.2.0",
     "@stripe/react-stripe-js": "^3.9.0",
     "@stripe/stripe-js": "^7.8.0",
     "@tensorflow/tfjs": "^4.22.0",
@@ -39,7 +39,7 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^6.23.1",
     "react-sketch-canvas": "^6.2.0",
-    "three": "^0.179.1"
+    "three": "^0.150.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",
