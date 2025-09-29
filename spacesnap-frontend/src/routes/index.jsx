@@ -42,6 +42,7 @@ import PortfolioManagement from '../pages/dashboards/admin/PortfolioManagement';
 import SystemSettings from '../pages/dashboards/admin/SystemSettings';
 import EmailTemplatesPage from '../pages/dashboards/admin/EmailTemplatesPage';
 import FeatureFlagsPage from '../pages/dashboards/admin/FeatureFlagsPage';
+import PaymentSettingsPage from '../pages/dashboards/admin/PaymentSettingsPage'; // Added import for consistency
 
 // --- USER DASHBOARD PAGES ---
 import UserProfilePage from '../pages/dashboards/UserProfilePage';
@@ -57,7 +58,7 @@ import MyContentPage from '../pages/dashboards/MyContentPage';
 import DesignerAnalyticsPage from '../pages/dashboards/DesignerAnalyticsPage'; 
 import DesignerProfilePage from '../pages/dashboards/DesignerProfilePage'; 
 
-// --- YOUR ORIGINAL ROUTING LOGIC COMPONENTS (UNCHANGED) ---
+// --- ROUTING LOGIC COMPONENTS (Your original working versions) ---
 const ProtectedRouteLogic = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
@@ -70,8 +71,8 @@ const DashboardGateway = () => {
   const { user } = useAuth();
   switch (user?.role) {
     case 'admin': return <Navigate to="/admin" replace />;
-    case 'designer': return <Navigate to="/designer/dashboard" replace />;
-    default: return <Navigate to="/user/profile" replace />;
+    case 'designer': return <Navigate to="/designer" replace />;
+    default: return <Navigate to="/user" replace />;
   }
 };
 
@@ -101,23 +102,15 @@ const AppRoutes = () => {
       <Route path="/verify-otp/:userId" element={<OtpVerificationPage />} />
       <Route path="/verify-email" element={<EmailVerificationPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password/:resettoken" element={<ResetPasswordPage />} />
+      <Route path="/reset-password/:resettoken" element={<ResetPasswordPage />} /> 
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       {/* === PROTECTED ROUTES === */}
       <Route element={<ProtectedRouteLogic />}>
         <Route path="/dashboard" element={<DashboardGateway />} />
-        
-        {/* Features with Main Layout */}
-        <Route element={<MainLayout><Outlet /></MainLayout>}>
-          <Route path="/style-quiz" element={<StyleQuizPage />} />
-        </Route>
-        
-        {/* Fullscreen Features (No Layout) */}
-        <Route path="/visualizer" element={<AiVisualizerPage />} />
-        <Route path="/visualizer/:designId" element={<AiVisualizerPage />} />
-        <Route path="/ar-preview" element={<ArPreviewPage />} />
-        <Route path="/upgrade" element={<UpgradePage />} />
+
+        {/* --- THIS IS THE FIX FOR THE DASHBOARD ROUTES --- */}
+        {/* Each dashboard now has its own top-level route with a layout and an index route */}
 
         {/* === ADMIN DASHBOARD ROUTES === */}
         <Route path="/admin" element={<AdminDashboardLayout />}>
@@ -128,7 +121,8 @@ const AppRoutes = () => {
           <Route path="portfolio" element={<PortfolioManagement />} />
           <Route path="settings" element={<SystemSettings />} />
           <Route path="email-templates" element={<EmailTemplatesPage />} /> 
-          <Route path="feature-flags" element={<FeatureFlagsPage />} /> 
+          <Route path="feature-flags" element={<FeatureFlagsPage />} />
+          <Route path="payment-settings" element={<PaymentSettingsPage />} />
         </Route>
 
         {/* === USER DASHBOARD ROUTES === */}
@@ -143,10 +137,7 @@ const AppRoutes = () => {
         </Route>
 
         {/* === DESIGNER DASHBOARD ROUTES === */}
-        {/* --- THIS IS THE FIX --- */}
-        {/* We wrap the designer pages in the UserDashboardLayout */}
         <Route path="/designer" element={<UserDashboardLayout />}>
-        {/* --- END OF FIX --- */}
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DesignerDashboardPage />} />
           <Route path="content" element={<MyContentPage />} />
@@ -154,6 +145,17 @@ const AppRoutes = () => {
           <Route path="profile" element={<DesignerProfilePage />} /> 
           <Route path="consultations/:consultationId" element={<ConsultationDetailPage />} />
         </Route>
+        
+        {/* --- OTHER PROTECTED PAGES --- */}
+        <Route element={<MainLayout><Outlet /></MainLayout>}>
+          <Route path="/style-quiz" element={<StyleQuizPage />} />
+        </Route>
+        
+        {/* Fullscreen pages */}
+        <Route path="/ar-preview" element={<ArPreviewPage />} />
+        <Route path="/visualizer" element={<AiVisualizerPage />} />
+        <Route path="/visualizer/:designId" element={<AiVisualizerPage />} />
+        <Route path="/upgrade" element={<UpgradePage />} />
       </Route>
     </Routes>
   );
