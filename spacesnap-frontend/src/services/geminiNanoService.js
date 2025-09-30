@@ -79,7 +79,7 @@ class GeminiService {
       };
 
       const response = await fetch(
-        `${this.baseUrl}/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
+        `${this.baseUrl}/gemini-2.5-flash-image-preview:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: {
