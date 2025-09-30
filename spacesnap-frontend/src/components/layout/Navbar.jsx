@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
-import { FaBars, FaTimes, FaLock } from "react-icons/fa"; // Import FaLock
+import { FaBars, FaTimes } from "react-icons/fa";
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/images/logo.jpg';
 
@@ -13,20 +13,15 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
-  // --- THIS IS THE KEY LOGIC ---
-  // A simple boolean to check if the user is premium or higher
-  const isPremiumOrHigher = user?.subscription === 'premium' || user?.role === 'designer' || user?.role === 'admin';
-
-  // --- MODIFIED NAV ITEMS ---
-  // We add an 'isLocked' property to the premium features
+  // The complete list of navigation items
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Portfolio", path: "/portfolio" },
     { name: "Style Quiz", path: "/style-quiz" },
-    { name: "Room Visualizer", path: "/visualizer", isLocked: !isPremiumOrHigher },
-    { name: "Room Preview", path: "/ar-preview", isLocked: !isPremiumOrHigher },
+    { name: "Room Visualizer", path: "/visualizer" },
+    { name: "Room Preview", path: "/ar-preview" },
+    
   ];
-  // --- END OF MODIFICATION ---
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -44,55 +39,6 @@ const Navbar = () => {
     navigate('/');
   };
   
-  // --- NEW COMPONENT FOR CONDITIONAL LINKS ---
-  const ConditionalNavLink = ({ item, isMobile = false }) => {
-    const baseClass = isMobile ? "block px-3 py-2 rounded-md text-base font-medium" : "px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200";
-    
-    const activeClass = "bg-primary-teal text-white";
-    const inactiveClass = "text-gray-600 hover:text-primary-teal hover:bg-gray-100";
-    
-    if (item.isLocked && isAuthenticated) {
-      // If the item is locked and user is logged in, link to upgrade
-      return (
-        <Link 
-          to="/upgrade" 
-          onClick={isMobile ? () => setIsMobileMenuOpen(false) : undefined}
-          className={`${baseClass} ${inactiveClass} flex items-center justify-between`}
-        >
-          <span>{item.name}</span>
-          <FaLock className="text-yellow-500" size={12} />
-        </Link>
-      );
-    }
-
-    if (item.isLocked && !isAuthenticated) {
-      // If item is locked and user is NOT logged in, link to login
-      return (
-        <Link 
-          to="/login" 
-          onClick={isMobile ? () => setIsMobileMenuOpen(false) : undefined}
-          className={`${baseClass} ${inactiveClass} flex items-center justify-between`}
-        >
-          <span>{item.name}</span>
-          <FaLock className="text-yellow-500" size={12} />
-        </Link>
-      );
-    }
-    
-    // Default NavLink for public or unlocked items
-    return (
-      <NavLink 
-        to={item.path}
-        end={item.path === "/"}
-        onClick={isMobile ? () => setIsMobileMenuOpen(false) : undefined}
-        className={({ isActive }) => `${baseClass} ${isActive ? activeClass : inactiveClass}`}
-      >
-        {item.name}
-      </NavLink>
-    );
-  };
-  // --- END OF NEW COMPONENT ---
-  
   return (
     <header className="w-full fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
@@ -101,10 +47,20 @@ const Navbar = () => {
           <span className="text-xl font-bold text-neutral-dark">SpaceSnap</span>
         </Link>
 
-        {/* --- DESKTOP NAVIGATION --- */}
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-4">
           {navItems.map((item) => (
-            <ConditionalNavLink key={item.name} item={item} />
+            <NavLink 
+              key={item.name} 
+              to={item.path}
+              end={item.path === "/"} 
+              className={({ isActive }) => 
+                `px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  isActive ? "bg-primary-teal text-white" : "text-gray-600 hover:text-primary-teal hover:bg-gray-100"
+                }`
+              }
+            >
+              {item.name}
+            </NavLink>
           ))}
         </nav>
 
@@ -117,7 +73,10 @@ const Navbar = () => {
                 </button>
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border py-1 z-50 animate-fadeIn">
-                    <div className="px-4 py-3 border-b"><p className="text-sm font-semibold text-gray-800">Signed in as</p><p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'User'}</p></div>
+                    <div className="px-4 py-3 border-b">
+                      <p className="text-sm font-semibold text-gray-800">Signed in as</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'User'}</p>
+                    </div>
                     <Link to="/dashboard" onClick={() => setIsDropdownOpen(false)} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Dashboard</Link>
                     <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Sign out</button>
                   </div>
@@ -137,12 +96,13 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* --- MOBILE NAVIGATION --- */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navItems.map((item) => (
-              <ConditionalNavLink key={item.name} item={item} isMobile={true} />
+              <NavLink key={item.name} to={item.path} end={item.path === "/"} onClick={() => setIsMobileMenuOpen(false)} className={({ isActive }) => `block px-3 py-2 rounded-md text-base font-medium ${isActive ? "bg-primary-teal text-white" : "text-gray-600 hover:bg-gray-100"}`}>
+                {item.name}
+              </NavLink>
             ))}
             <div className="border-t border-gray-200 pt-4 mt-4">
               {isAuthenticated ? (

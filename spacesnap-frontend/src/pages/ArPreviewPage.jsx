@@ -28,7 +28,7 @@ const CameraCapture = ({ onComplete }) => {
     return ( <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'black' }}> <video ref={videoRef} autoPlay playsInline style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}></video> <canvas ref={canvasRef} style={{ display: 'none' }}></canvas> <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 2 }} className="bg-black bg-opacity-60 text-white p-6 rounded-lg text-center pointer-events-none"> <FaCamera className="text-4xl mx-auto mb-3" /> <h3 className="text-xl font-bold">Scanning Room...</h3> <p>Move your phone slowly.</p></div> </div> );
 };
 
-// --- THIS IS THE FINAL COMPONENT WITH PDF SAVING ---
+// --- THIS IS THE FINAL COMPONENT WITH THE REFINEMENT FIX ---
 const InpaintingComponent = ({ selectedImage }) => {
     const sketchCanvasRef = useRef(null);
     const [prompt, setPrompt] = useState('');
@@ -39,6 +39,7 @@ const InpaintingComponent = ({ selectedImage }) => {
     
     const [view, setView] = useState('editing');
     const [finalPrompt, setFinalPrompt] = useState('');
+    const [savedMask, setSavedMask] = useState(null);
     const [refinementAnswers, setRefinementAnswers] = useState({ item: '', color: '', style: '', lighting: '', materials: '', mood: '' });
 
     const dataURLtoFile = (dataurl, filename) => {
@@ -47,15 +48,22 @@ const InpaintingComponent = ({ selectedImage }) => {
         while (n--) { u8arr[n] = bstr.charCodeAt(n); } return new File([u8arr], filename, { type: mime });
     };
 
-    const handleGenerate = async (currentPrompt, imageToEdit) => {
+    const handleGenerate = async (currentPrompt, imageToEdit, maskToUse) => {
         setIsLoading(true); setError('');
         const apiKey = import.meta.env.VITE_SEGMIND_API_KEY;
         if (!apiKey) { setError("Segmind API key is not configured."); setIsLoading(false); return; }
 
         try {
-            const maskDataURL = await sketchCanvasRef.current.exportImage('png');
+            let base64Mask;
+            if (maskToUse) {
+                base64Mask = maskToUse.split(',')[1];
+            } else {
+                const maskDataURL = await sketchCanvasRef.current.exportImage('png');
+                setSavedMask(maskDataURL);
+                base64Mask = maskDataURL.split(',')[1];
+            }
+
             const base64Image = imageToEdit.split(',')[1];
-            const base64Mask = maskDataURL.split(',')[1];
             const response = await fetch('https://api.segmind.com/v1/sd1.5-inpainting', {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
                 body: JSON.stringify({
@@ -82,7 +90,7 @@ const InpaintingComponent = ({ selectedImage }) => {
         if(refinementAnswers.lighting) newPrompt += ` The room should have ${refinementAnswers.lighting} lighting`;
         if(refinementAnswers.materials) newPrompt += ` and use materials like ${refinementAnswers.materials}.`;
         if(refinementAnswers.mood) newPrompt += ` The overall mood should be ${refinementAnswers.mood}.`;
-        handleGenerate(newPrompt, selectedImage);
+        handleGenerate(newPrompt, selectedImage, savedMask);
     };
 
     const handleDownload = () => {
@@ -168,7 +176,7 @@ const InpaintingComponent = ({ selectedImage }) => {
                 <div className="flex gap-4"><button onClick={() => sketchCanvasRef.current.eraseMode(true)} className="flex-1 bg-pink-500 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2"><FaEraser /> Use Eraser</button><button onClick={() => sketchCanvasRef.current.undo()} className="flex-1 bg-gray-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2"><FaUndo /> Undo</button><button onClick={() => sketchCanvasRef.current.clearCanvas()} className="flex-1 bg-gray-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2">Clear</button></div>
                 <div className="bg-white p-3 rounded-lg text-black"><label className="font-semibold">AI Strength: {strength}%</label><input type="range" min="10" max="100" value={strength} onChange={(e) => setStrength(e.target.value)} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" /></div>
                 <input type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., a modern blue velvet sofa" className="w-full p-4 rounded-lg text-lg text-black" />
-                <button onClick={() => handleGenerate(prompt, selectedImage)} disabled={!prompt || isLoading} className="bg-green-500 text-white font-bold py-4 px-6 rounded-lg text-xl flex items-center justify-center gap-2 disabled:bg-gray-400">
+                <button onClick={() => handleGenerate(prompt, selectedImage, null)} disabled={!prompt || isLoading} className="bg-green-500 text-white font-bold py-4 px-6 rounded-lg text-xl flex items-center justify-center gap-2 disabled:bg-gray-400">
                     {isLoading ? <FaSpinner className="animate-spin" /> : <FaMagic />}
                     {isLoading ? 'Generating...' : 'Generate New Image'}
                 </button>

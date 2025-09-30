@@ -102,7 +102,7 @@ const AppRoutes = () => {
       <Route path="/verify-otp/:userId" element={<OtpVerificationPage />} />
       <Route path="/verify-email" element={<EmailVerificationPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password/:resettoken" element={<ResetPasswordPage />} /> 
+      <Route path="/reset-password" element={<ResetPasswordPage />} /> 
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       {/* === PROTECTED ROUTES === */}
